@@ -24,7 +24,7 @@ export const authService = {
     user_password,
     pro_pic,
     createdAt,
-    clientIsWeb,
+    clientIsWeb,  
   }) => {
     const hashedPassword = await bcrypt.hash(user_password, 10);
     const encryName = encrypt(full_name).encryptedData;

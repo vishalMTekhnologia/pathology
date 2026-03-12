@@ -116,7 +116,7 @@ console.log(sample);
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Welcome, to Memorify School Gallery!");
+  res.send("Welcome, to Pathology Lab!");
 });
 
 // -------------------- Error Handlers --------------------

@@ -9,7 +9,6 @@ import { AppError } from "../../middlewares/app-error.js";
 import { ResponseBuilder } from "../../utils/response.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 
-
 // Load environment variables
 dotenv.config();
 
@@ -24,7 +23,7 @@ export const authService = {
     user_password,
     pro_pic,
     createdAt,
-    clientIsWeb,
+    clientIsWeb,  
   }) => {
     const hashedPassword = await bcrypt.hash(user_password, 10);
     const encryName = encrypt(full_name).encryptedData;
@@ -177,7 +176,7 @@ export const authService = {
       photo_verified: !!user.pro_pic,
     });
 
-    console.log("newRefreshToken : ", newRefreshToken);
+    // console.log("newRefreshToken : ", newRefreshToken);
 
     /* Optional vault check */
     const [vault] = await query(
@@ -204,7 +203,7 @@ export const authService = {
       photo_verified: !!user.pro_pic,
     });
 
-    console.log("newAccessToken :", newAccessToken);
+    // console.log("newAccessToken :", newAccessToken);
     /* Update existing session */
     await query(
       `
@@ -284,7 +283,7 @@ export const authService = {
     });
   },
 
-  // Logout User
+  // Logout User 
   logoutUser: async (user_id, session_id, logoutAll) => {
     // Check if user exists and is active
     const [userRows] = await query(

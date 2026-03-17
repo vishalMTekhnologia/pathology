@@ -7,7 +7,7 @@ import { asyncHandler } from "../../utils/async-handler.js";
 import { AppError } from "../../middlewares/app-error.js";
 import { validatePassword } from "../../utils/validate-password.js";
 import { photoToAzureBlob } from "../../middlewares/multer-middleware.js";
-import { checkAdminForBranch } from "../../utils/check-admin-for-branch.js";
+import { checkAdmins } from "../../utils/check-admin.js";
 
 export const authController = {
   // Login User
@@ -354,8 +354,8 @@ export const authController = {
     //   throw new AppError("You can not set role is super admin",400,);
     // }
 
-    // Role check: only super_admin (1) or firm_admin (2)
-    await checkAdminForBranch(user_id);
+    // Role check: only super_admin or admin
+    await checkAdmins(user_id);
 
     const response = await authService.updateUser(
       role_id,

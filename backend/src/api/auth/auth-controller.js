@@ -241,7 +241,9 @@ export const authController = {
 
   // Profile fetch controller
   fetchUserById: asyncHandler(async (req, res) => {
-    const { user_id } = req.params;
+    // const { user_id } = req.params;
+      const user_id = req.user?.user_id;
+    
     if (!user_id) {
       throw new AppError("user_id is required", 400);
     }
@@ -325,7 +327,7 @@ export const authController = {
     }
     const response = await authService.updateUserProfile(
       user_id,
-      full_name,
+      full_name,  
       user_email,
       contact_no,
       address,

@@ -47,7 +47,7 @@ const allowedOrigins = [
   "http://192.168.29.113:5173",
   "http://192.168.1.7:5173",
   "http://localhost:4000/",
-  "http://20.244.100.159:4000",
+  "http://192.168.1.29:5173",
   "http://20.244.36.151:4000/",
   "http://20.244.100.159:8000",
 ];
@@ -112,11 +112,11 @@ const sample = decrypt(
   process.env.STATIC_KEY,
 );
 // const sample = encrypt("delhi").encryptedData;
-console.log(sample);
+// console.log(sample);
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Welcome, to Memorify School Gallery!");
+  res.send("Welcome, to Pathology Lab!");
 });
 
 // -------------------- Error Handlers --------------------
@@ -130,5 +130,7 @@ server.listen(PORT, () => {
   console.log(`Socket.IO server running on port: ${PORT}`);
   console.log(`Allowed origins:`, allowedOrigins);
 });
+
+
 
 

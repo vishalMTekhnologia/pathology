@@ -241,7 +241,9 @@ export const authController = {
 
   // Profile fetch controller
   fetchUserById: asyncHandler(async (req, res) => {
-    const { user_id } = req.params;
+    // const { user_id } = req.params;
+      const user_id = req.user?.user_id;
+    
     if (!user_id) {
       throw new AppError("user_id is required", 400);
     }
@@ -252,7 +254,7 @@ export const authController = {
   // Fetch All Users (Only Super Admin)
   fetchAllUsers: asyncHandler(async (req, res) => {
     const user_id = req.user.user_id;
-    const role_name = req.user?.role_name;
+    // const role_name = req.user?.role_name;
     // Pagination params
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -261,10 +263,10 @@ export const authController = {
       throw new AppError("User id is required", 400);
     }
 
-    // Allow only super admin
-    if (role_name !== "super_admin") {
-      throw new AppError("Only super admin can access users list", 403);
-    }
+    // // Allow only super admin
+    // if (role_name !== "super_admin") {
+    //   throw new AppError("Only super admin can access users list", 403);
+    // }
 
     const response = await authService.getAllUsers(page, limit);
     return res.status(response.statusCode).json(response);
@@ -325,7 +327,7 @@ export const authController = {
     }
     const response = await authService.updateUserProfile(
       user_id,
-      full_name,
+      full_name,  
       user_email,
       contact_no,
       address,

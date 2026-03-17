@@ -29,7 +29,6 @@ export const labService = {
 
   },
 
-
   updateLab: async (data) => {
 
     const sql = `CALL update_lab(?,?,?,?,?,?,?,?,?,?)`;
@@ -54,7 +53,6 @@ export const labService = {
     );
 
   },
-
 
   deleteLab: async (lab_id, deleted_at, deleted_by) => {
 
@@ -82,7 +80,6 @@ export const labService = {
 
   },
 
-
   getLabs: async () => {
 
     const sql = `CALL get_labs()`;
@@ -92,6 +89,34 @@ export const labService = {
     return ResponseBuilder.success(
       rows[0],
       "Labs fetched successfully"
+    );
+
+  },
+
+    assignLabUsers: async (data) => {
+
+    const { lab_id, user_ids, created_at, created_by } = data;
+
+    if (!lab_id) {
+      throw new AppError("lab_id is required", 400);
+    }
+
+    if (!Array.isArray(user_ids)) {
+      throw new AppError("user_ids must be array", 400);
+    }
+
+    const sql = `CALL assign_lab_users(?,?,?,?)`;
+
+    await query(sql, [
+      lab_id,
+      JSON.stringify(user_ids),
+      created_at,
+      created_by
+    ]);
+
+    return ResponseBuilder.success(
+      null,
+      "Lab users synced successfully"
     );
 
   }

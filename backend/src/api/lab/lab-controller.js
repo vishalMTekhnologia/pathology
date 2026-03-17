@@ -75,7 +75,6 @@ export const labController = {
 
   }),
 
-
   deleteLab: asyncHandler(async (req, res) => {
    const { lab_id } = req.params;
     const deleted_by = req.user?.user_id;
@@ -95,14 +94,31 @@ export const labController = {
 
   }),
 
-
-
   getLabs: asyncHandler(async (req, res) => {
 
     const response = await labService.getLabs();
 
     res.status(response.statusCode).json(response);
 
-  })
+  }),
+
+   assignLabUsers: asyncHandler(async (req, res) => {
+
+    const { lab_id, user_ids } = req.body;
+
+    if (!lab_id || !user_ids) {
+      throw new AppError("lab_id and user_ids are required", 400);
+    }
+
+    const response = await labService.assignLabUsers({
+      lab_id,
+      user_ids,
+      created_at: getEpochTime(),
+      created_by: req.user?.user_id
+    });
+
+    res.status(response.statusCode).json(response);
+  }),
+
 
 };

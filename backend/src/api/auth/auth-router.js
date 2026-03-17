@@ -28,7 +28,7 @@ export const authRouter = (() => {
   router.get("/all-users", checkJWT, authController.fetchAllUsers);
 
   // profile fetch User
-  router.get("/get-profile/:user_id",checkJWT, authController.fetchUserById);
+  router.get("/get-profile",checkJWT, authController.fetchUserById);
 
   // fetch roles
   router.get("/roles", checkJWT, authController.fetchAllRoles);

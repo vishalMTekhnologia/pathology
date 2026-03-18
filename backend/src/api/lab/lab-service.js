@@ -88,10 +88,7 @@ export const labService = {
 
     const [rows] = await query(sql);
 
-    return ResponseBuilder.success(
-      rows[0],
-      "Labs fetched successfully"
-    );
+    return ResponseBuilder.success( "Labs fetched successfully", rows);
 
   },
 
@@ -126,7 +123,7 @@ export const labService = {
     deleteLabUser: async (lab_user_id, deleted_at, deleted_by) => {
 
     await checkAdmins(deleted_by);
-    
+
     if (!lab_user_id) {
       throw new AppError("lab_user_id is required", 400);
     }

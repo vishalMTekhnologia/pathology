@@ -174,6 +174,7 @@ export const authService = {
         user.pro_pic ||
         "39ee561ae418f2b31d0f85a05fbf051019a37f3644da0512c5e903133d9925209c41d6c0b4b768171ce58b298d29889b7d149ffeb54dcc3a765d42fad77b1a1774180d55b04d339811e9629502f83416",
       photo_verified: !!user.pro_pic,
+      lab_id: user.lab_id,
     });
 
     // console.log("newRefreshToken : ", newRefreshToken);
@@ -201,6 +202,7 @@ export const authService = {
         user.pro_pic ||
         "39ee561ae418f2b31d0f85a05fbf051019a37f3644da0512c5e903133d9925209c41d6c0b4b768171ce58b298d29889b7d149ffeb54dcc3a765d42fad77b1a1774180d55b04d339811e9629502f83416",
       photo_verified: !!user.pro_pic,
+      lab_id: user.lab_id,
     });
 
     // console.log("newAccessToken :", newAccessToken);
@@ -256,6 +258,7 @@ export const authService = {
       profile_photo:user.pro_pic 
       ||"39ee561ae418f2b31d0f85a05fbf051019a37f3644da0512c5e903133d9925209c41d6c0b4b768171ce58b298d29889b7d149ffeb54dcc3a765d42fad77b1a1774180d55b04d339811e9629502f83416",
       photo_verified: !!user.pro_pic,
+      lab_id: user.lab_id
     });
     
 

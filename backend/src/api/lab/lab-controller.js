@@ -3,6 +3,7 @@ import { asyncHandler } from "../../utils/async-handler.js";
 import { getEpochTime } from "../../utils/epoch.js";
 import { labService } from "./lab-service.js";
 
+
 export const labController = {
 
   addLab: asyncHandler(async (req, res) => {
@@ -102,6 +103,7 @@ export const labController = {
 
   }),
 
+  // Lab Users
    assignLabUsers: asyncHandler(async (req, res) => {
 
     const { lab_id, user_ids } = req.body;
@@ -120,5 +122,25 @@ export const labController = {
     res.status(response.statusCode).json(response);
   }),
 
+   deleteLabUsers: asyncHandler(async (req, res) => {
+    const { lab_user_id } = req.body;
+
+    if (!lab_user_id) {
+      throw new AppError("lab_user_id is required", 400);
+    }
+    const user_id = req.user?.user_id;
+    if (!user_id) {
+      throw new AppError("Unauthorized", 401);
+    }
+
+    const response = await labService.deleteLabUser(
+      lab_user_id,
+      getEpochTime(),
+      user_id
+    );
+
+    res.status(response.statusCode).json(response);
+
+  })
 
 };

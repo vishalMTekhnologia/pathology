@@ -11,7 +11,7 @@ const adminLinks = [
     { label: "Employees", icon: <Users size={18} />, path: "/employees" },
     { label: "Test Management", icon: <Beaker size={18} />, path: "/test-management" },
     { label: "Pathology Details", icon: <FlaskConical size={18} />, path: "/pathology-details" },
-    { label: "Profile", icon: <UserCircle size={18} />, path: "/profile" },
+    // { label: "Profile", icon: <UserCircle size={18} />, path: "/profile" },
     { label: "Refer Doctor", icon: <Stethoscope size={18} />, path: "/refer-doctor" },
 ];
 

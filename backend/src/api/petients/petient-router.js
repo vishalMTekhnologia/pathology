@@ -13,7 +13,7 @@ router.get("/get",  patientController.getPatientsByLab);
 router.put("/update",  patientController.updatePatient);
 
 // Delete
-router.delete("/:patient_id",  patientController.deletePatient);
+router.delete("/delete/:patient_id",  patientController.deletePatient);
 
  return router;
 })();

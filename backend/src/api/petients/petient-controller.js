@@ -64,48 +64,53 @@ export const patientController = {
   }),
 
   // ✅ Update Patient
-  updatePatient: asyncHandler(async (req, res) => {
+ updatePatient: asyncHandler(async (req, res) => {
 
-    const {
-      patient_id,
-      patient_name,
-      patient_address,
-      patient_contact,
-      patient_email,
-      sex,
-      ref_by_id,
-      age,
-      test_ids,
-      status,
-      fees,
-      advance,
-    } = req.body;
+  const {
+    patient_id,
+    patient_name,
+    patient_address,
+    patient_contact,
+    patient_email,
+    sex,
+    ref_by_id,
+    age,
+    test_ids,
+    status,
+    fees,
+    advance,
+  } = req.body;
 
-    if (!patient_id) {
-      throw new AppError("patient_id is required", 400);
-    }
+  if (!patient_id) {
+    throw new AppError("patient_id is required", 400);
+  }
 
-    const data = {
-      patient_id,
-      patient_name,
-      patient_address,
-      patient_contact,
-      patient_email,
-      sex,
-      ref_by_id,
-      age,
-      test_ids,
-      status,
-      fees,
-      advance,
-      updated_at: getEpochTime(),
-      updated_by: req.user?.user_id
-    };
+  // ✅ validate only if provided
+  if (test_ids && (!Array.isArray(test_ids) || test_ids.length === 0)) {
+    throw new AppError("test_ids must be non-empty array", 400);
+  }
 
-    const response = await patientService.updatePatient(data);
+  const data = {
+    patient_id,
+    patient_name,
+    patient_address,
+    patient_contact,
+    patient_email,
+    sex,
+    ref_by_id,
+    age,
+    test_ids,
+    status,
+    fees,
+    advance,
+    updated_at: getEpochTime(),
+    updated_by: req.user?.user_id
+  };
 
-    res.status(response.statusCode).json(response);
-  }),
+  const response = await patientService.updatePatient(data);
+
+  res.status(response.statusCode).json(response);
+}),
 
   // ✅ Delete Patient
   deletePatient: asyncHandler(async (req, res) => {

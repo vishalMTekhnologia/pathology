@@ -11,7 +11,7 @@ const initialDetails = {
     registrationNo: "LAB-REG-2025-0042",
     accreditation: "NABL Accredited · ISO 15189:2012",
     address: "123 Main Street, City, State - 400001",
-    phone: "+91 98765 43210",
+    phone: "+91 86868 86868",
     email: "info@abcpathlab.com",
     website: "www.abcpathlab.com",
     directorName: "Dr. Rajesh Sharma",

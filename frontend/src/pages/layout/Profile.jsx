@@ -14,18 +14,19 @@ const Profile = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user, loading, error } = useSelector((state) => state.profile);
-    const { user: authUser } = useSelector((state) => state.auth);
 
     useEffect(() => {
-        const userId = authUser?.user_id || localStorage.getItem("user_id") || 2;
-        dispatch(getProfile(userId));
-    }, [dispatch, authUser]);
+        // Just dispatch getProfile - no userId needed
+        // The backend will get the user ID from the token
+        dispatch(getProfile());
+    }, [dispatch]);
 
     const handleLogout = () => {
         dispatch(logout());
         navigate("/login");
     };
 
+    // Loading state
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[60vh] flex-col gap-3">
@@ -35,6 +36,7 @@ const Profile = () => {
         );
     }
 
+    // Error state
     if (error) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
@@ -46,20 +48,23 @@ const Profile = () => {
         );
     }
 
+    // Don't render anything if no user data
     if (!user) return null;
 
-    const isAdmin = user.role_id === 1 || user.role_name === "Admin";
-    const accentGrad = isAdmin ? "from-cyan-600 to-cyan-500" : "from-violet-600 to-violet-500";
-    const accentBg = isAdmin ? "bg-cyan-50" : "bg-violet-50";
-    const accentBorder = isAdmin ? "border-cyan-200" : "border-violet-200";
-    const accentText = isAdmin ? "text-cyan-700" : "text-violet-700";
-    const accentColor = isAdmin ? "#0891b2" : "#7c3aed";
-    const accentIcon = isAdmin ? "text-cyan-600" : "text-violet-600";
-    const accentShadow = isAdmin ? "shadow-cyan-500/25" : "shadow-violet-500/25";
-    const accentIconBg = isAdmin ? "bg-cyan-100" : "bg-violet-100";
+    // Determine if user is admin for styling
+    const isAdmin = user.role_id === 2 || user.role_name === "Admin";
+    const accentGrad = isAdmin ? "from-cyan-600 to-cyan-500" : "from-cyan-600 to-cyan-500";
+    const accentBg = isAdmin ? "bg-cyan-50" : "bg-cyan-50";
+    const accentBorder = isAdmin ? "border-cyan-200" : "border-cyan-200";
+    const accentText = isAdmin ? "text-cyan-700" : "text-cyan-700";
+    const accentColor = isAdmin ? "#0891b2" : "#0891b2";
+    const accentIcon = isAdmin ? "text-cyan-600" : "text-cyan-600";
+    const accentShadow = isAdmin ? "shadow-cyan-500/25" : "shadow-cyan-500/25";
+    const accentIconBg = isAdmin ? "bg-cyan-100" : "bg-cyan-100";
 
+    // Stats row data
     const statsRow = [
-        { label: "User ID", value: `#${user.user_id}`, icon: <Hash size={18} />, color: "text-violet-600", bg: "bg-violet-50" },
+        // { label: "User ID", value: `#${user.user_id}`, icon: <Hash size={18} />, color: "text-violet-600", bg: "bg-violet-50" },
         { label: "Role", value: user.role_name || "—", icon: <Shield size={18} />, color: isAdmin ? "text-cyan-600" : "text-violet-600", bg: accentBg },
         { label: "Status", value: user.user_status === "1" ? "Active" : "Inactive", icon: <BadgeCheck size={18} />, color: "text-emerald-600", bg: "bg-emerald-50" },
         {
@@ -77,7 +82,7 @@ const Profile = () => {
         <div className="font-sans min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50/30">
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
 
-                {/* ── Page Header ── */}
+                {/* Page Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">My Profile</h1>
@@ -94,10 +99,10 @@ const Profile = () => {
                     </button>
                 </div>
 
-                {/* ── Hero Banner ── */}
+                {/* Hero Banner */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
-                    {/* Banner */}
+                    {/* Banner gradient */}
                     <div className={`h-28 bg-gradient-to-r ${accentGrad} relative overflow-hidden`}>
                         <div className="absolute inset-0 opacity-20"
                             style={{
@@ -108,7 +113,7 @@ const Profile = () => {
                         <div className="absolute right-24 bottom-0 w-24 h-24 rounded-full bg-white/10" />
                     </div>
 
-                    {/* Identity — centered */}
+                    {/* Profile Identity */}
                     <div className="flex flex-col items-center text-center px-6 pt-6 pb-8 -mt-10 relative">
                         <div className={`w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-xl
                                         ${accentShadow} flex items-center justify-center mb-4`}>
@@ -133,15 +138,15 @@ const Profile = () => {
                         </p>
 
                         {/* Role badge */}
-                        <div className={`mt-3 inline-flex items-center gap-2 ${accentBg} ${accentBorder}
+                        {/* <div className={`mt-3 inline-flex items-center gap-2 ${accentBg} ${accentBorder}
                                         border ${accentText} text-xs font-semibold px-3 py-1.5 rounded-full`}>
                             {isAdmin ? <Shield size={12} /> : <FlaskConical size={12} />}
                             {user.role_name || "—"}
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Stats Row */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-gray-100">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 border-t border-gray-100">
                         {statsRow.map((stat, i) => (
                             <div key={i}
                                 className={`flex flex-col items-center justify-center py-5 gap-2
@@ -160,7 +165,7 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* ── Contact & Account Info ── */}
+                {/* Contact & Account Info */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* Contact Info */}
@@ -264,7 +269,7 @@ const Profile = () => {
                             </div>
 
                             {/* User ID */}
-                            <div className="flex items-start gap-3">
+                            {/* <div className="flex items-start gap-3">
                                 <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <Hash size={15} className="text-gray-500" />
                                 </div>
@@ -272,7 +277,7 @@ const Profile = () => {
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">User ID</p>
                                     <p className="text-sm font-medium text-gray-800">#{user.user_id}</p>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>

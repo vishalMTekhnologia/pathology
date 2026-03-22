@@ -123,7 +123,7 @@ const Navbar = ({ sidebarWidth = 220, onToggle }) => {
                                 style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }}
                             />
                         ) : (
-                            <UserCircle size={20} color={isAdmin ? "#0891b2" : "#7c3aed"} />
+                                <UserCircle size={20} color={isAdmin ? "#0891b2" : "#0891b2"} />
                         )}
                     </div>
 
@@ -132,7 +132,7 @@ const Navbar = ({ sidebarWidth = 220, onToggle }) => {
                             {displayName}
                         </div>
                         <div style={{
-                            fontSize: 10, color: isAdmin ? "#0891b2" : "#7c3aed",
+                            fontSize: 10, color: isAdmin ? "#0891b2" : "#0891b2",
                             fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px",
                             display: "flex", alignItems: "center", gap: 3,
                         }}>

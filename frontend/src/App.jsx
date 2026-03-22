@@ -11,7 +11,7 @@ import PathologyDetails from "./pages/AdminPages/PathologyDetails";
 import TechDashboard from "./pages/LabTechnicianPages/Dashboard";
 import TechTest from "./pages/LabTechnicianPages/Test";
 import GenerateReport from "./pages/LabTechnicianPages/GenerateReport";
-
+import DoctorManagement from "./pages/AdminPages/DoctorManagement";
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   if (!token) return <Navigate to="/login" replace />;
@@ -36,6 +36,8 @@ function App() {
           <Route path="technician-tests" element={<TechTest />} />
           <Route path="technician-report" element={<GenerateReport />} />
           <Route path="technician-profile" element={<Profile />} />
+          <Route path="refer-doctor" element={<DoctorManagement />} />
+
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

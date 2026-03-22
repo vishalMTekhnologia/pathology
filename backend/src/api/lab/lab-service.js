@@ -2,6 +2,8 @@ import { query } from "../../utils/database.js";
 import { ResponseBuilder } from "../../utils/response.js";
 import { AppError } from "../../middlewares/app-error.js";
 import { encrypt } from "../../utils/encryption.js";
+import { checkAdmins } from "../../utils/check-admin.js";
+
 export const labService = {
 
   addLab: async (data) => {
@@ -86,10 +88,7 @@ export const labService = {
 
     const [rows] = await query(sql);
 
-    return ResponseBuilder.success(
-      rows[0],
-      "Labs fetched successfully"
-    );
+    return ResponseBuilder.success( "Labs fetched successfully", rows);
 
   },
 
@@ -118,6 +117,34 @@ export const labService = {
       null,
       "Lab users synced successfully"
     );
+
+  },
+
+    deleteLabUser: async (lab_user_id, deleted_at, deleted_by) => {
+
+    await checkAdmins(deleted_by);
+
+    if (!lab_user_id) {
+      throw new AppError("lab_user_id is required", 400);
+    }
+
+    const sql = `CALL delete_lab_user(?,?,?)`;
+
+    try {
+      await query(sql, [
+        lab_user_id,
+        deleted_at,
+        deleted_by
+      ]);
+
+      return ResponseBuilder.success(
+        null,
+        "Lab user deleted successfully"
+      );
+
+    } catch (err) {
+      throw new AppError(err.message, 400);
+    }
 
   }
 

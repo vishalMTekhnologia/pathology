@@ -7,7 +7,9 @@ router.post("/add", labController.addLab);
 router.get("/", labController.getLabs);
 router.patch("/update", labController.updateLab);
 router.delete("/delete/:lab_id", labController.deleteLab);
-router.post("/assign-and-remove-user", labController.assignLabUsers)
+// lab users
+router.post("/assign-user", labController.assignLabUsers);
+router.delete("/delete-user", labController.deleteLabUsers)
 
   return router;
 })();

@@ -24,7 +24,6 @@ export const doctorService = {
     );
   },
 
-
   updateDoctor: async (data) => {
 
     const sql = `CALL update_doctor(?,?,?,?,?,?,?,?)`;
@@ -43,45 +42,31 @@ export const doctorService = {
     return ResponseBuilder.success(null, "Doctor updated successfully");
   },
 
-
   deleteDoctor: async (doc_id, deleted_at, deleted_by) => {
-
     if (!doc_id) {
       throw new AppError("doc_id is required", 400);
     }
-
     const sql = `CALL sp_delete_doctor(?,?,?)`;
-
     await query(sql, [
       doc_id,
       deleted_at,
       deleted_by
     ]);
-
     return ResponseBuilder.success(null, "Doctor deleted successfully");
   },
 
 
   getDoctors: async (lab_id) => {
-
-    const sql = `CALL get_doctors(?)`;
-
-    const [rows] = await query(sql, [lab_id]);
-
-    return ResponseBuilder.success(rows[0], "Doctors fetched successfully");
+    const [ rows ] = await query( `CALL get_doctors(?)`,[lab_id]);
+    return ResponseBuilder.success("Doctors fetched successfully", rows);
   },
 
-
   getDoctorById: async (doc_id) => {
-
     if (!doc_id) {
       throw new AppError("doc_id is required", 400);
     }
-
     const sql = `CALL sp_get_doctor_by_id(?)`;
-
     const [rows] = await query(sql, [doc_id]);
-
     return ResponseBuilder.success(rows[0][0], "Doctor fetched successfully");
   }
 

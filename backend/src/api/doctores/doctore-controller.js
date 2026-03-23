@@ -14,13 +14,13 @@ export const doctorController = {
     }
   },
 
-
   addDoctors: asyncHandler(async (req, res) => {
-
     doctorController.checkAdmin(req);
+    const lab_id = req.user?.lab_id;
+     console.log("req.user:", req.user);
+  console.log("lab_id:", lab_id);
 
     const {
-      lab_id,
       doc_name,
       doc_address,
       doc_contact,
@@ -48,10 +48,9 @@ export const doctorController = {
   updateDoctor: asyncHandler(async (req, res) => {
 
     doctorController.checkAdmin(req);
-
+ const lab_id = req.user?.lab_id;
     const {
       doc_id,
-      lab_id,
       doc_name,
       doc_address,
       doc_contact,
@@ -98,13 +97,17 @@ export const doctorController = {
 
 
   getDoctors: asyncHandler(async (req, res) => {
-    const lab_id = req.query;
+    // const {lab_id} = req.params;
+     const lab_id = req.user?.lab_id;
     doctorController.checkAdmin(req);
-
     const response = await doctorService.getDoctors(lab_id);
-
     res.status(response.statusCode).json(response);
   }),
+//   getClassById: asyncHandler(async (req, res) => {
+//   const { class_id } = req.params;
+//   const response = await classService.getClassById(Number(class_id));
+//   return res.status(response.statusCode).json(response);
+// }),
 
 
   getDoctorById: asyncHandler(async (req, res) => {

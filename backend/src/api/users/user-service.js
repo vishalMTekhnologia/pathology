@@ -9,7 +9,11 @@ export const usersService = {
             if (!labId) {
                 throw new AppError("lab_id is required", 400);
             }
+            console.log(labId);
+            
             const [rows] = await query('CALL GetLabTechnicians(?)', [labId]);
+            console.log("rows",rows);
+            
             const data = rows;
             return ResponseBuilder.success(
                 "Lab technicians fetched successfully",

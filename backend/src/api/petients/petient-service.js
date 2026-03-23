@@ -4,7 +4,7 @@ import { AppError } from "../../middlewares/app-error.js";
 
 export const patientService = {
 
-  // ✅ Create Patient
+  // Create Patient
   createPatient: async (data) => {
     const sql = `CALL CreatePatient(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
     const values = [
@@ -37,7 +37,7 @@ export const patientService = {
     }
   },
 
-  // ✅ Get Patients
+  // Get Patients
   getPatientsByLab: async (lab_id) => {
 
     const sql = `CALL GetPatientsByLab(?)`;
@@ -55,42 +55,40 @@ export const patientService = {
     }
   },
 
-  // ✅ Update Patient
- updatePatient: async (data) => {
+  // Update Patient
+  updatePatient: async (data) => {
+    const sql = `CALL UpdatePatient(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
 
-  const sql = `CALL UpdatePatient(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    const values = [
+      data.patient_id,
+      data.patient_name ?? null,
+      data.patient_address ?? null,
+      data.patient_contact ?? null,
+      data.patient_email ?? null,
+      data.sex ?? null,
+      data.ref_by_id ?? null,
+      data.age ?? null,
+      data.test_ids !== undefined ? JSON.stringify(data.test_ids) : null,
+      data.status ?? null,
+      data.fees ?? null,
+      data.advance ?? null,
+      data.updated_at,
+      data.updated_by
+    ];
 
-  const values = [
-    data.patient_id,
-    data.patient_name || null,
-    data.patient_address || null,
-    data.patient_contact || null,
-    data.patient_email || null,
-    data.sex || null,
-    data.ref_by_id || null,
-    data.age || null,
-    data.test_ids ? JSON.stringify(data.test_ids) : null, // ✅ FIX
-    data.status || null,
-    data.fees || null,
-    data.advance || null,
-    data.updated_at,
-    data.updated_by
-  ];
+    try {
+      await query(sql, values);
 
-  try {
-    await query(sql, values);
+      return ResponseBuilder.success(
+        null,
+        "Patient updated successfully"
+      );
 
-    return ResponseBuilder.success(
-      null,
-      "Patient updated successfully"
-    );
-
-  } catch (err) {
-    throw new AppError(err.message, 400);
-  }
-},
-
-  // ✅ Delete Patient
+    } catch (err) {
+      throw new AppError(err.message, 400);
+    }
+  },
+  // Delete Patient
   deletePatient: async (patient_id, deleted_at, deleted_by) => {
 
     const sql = `CALL DeletePatient(?,?,?)`;

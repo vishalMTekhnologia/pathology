@@ -5,7 +5,7 @@ import { patientService } from "./petient-service.js";
 
 export const patientController = {
 
-  // ✅ Create Patient
+  // Create Patient
   createPatient: asyncHandler(async (req, res) => {
     const lab_id = req.user?.lab_id;
     const created_by = req.user?.user_id;
@@ -49,7 +49,7 @@ export const patientController = {
     res.status(response.statusCode).json(response);
   }),
 
-  // ✅ Get Patients
+  // Get Patients
   getPatientsByLab: asyncHandler(async (req, res) => {
 
     const lab_id = req.user?.lab_id;
@@ -63,11 +63,13 @@ export const patientController = {
     res.status(response.statusCode).json(response);
   }),
 
-  // ✅ Update Patient
- updatePatient: asyncHandler(async (req, res) => {
-
+  // Update Patient
+updatePatient: asyncHandler(async (req, res) => {
+ const { patient_id } = req.params;
+    if (!patient_id) {
+      throw new AppError("patient_id is required", 400);
+    }
   const {
-    patient_id,
     patient_name,
     patient_address,
     patient_contact,
@@ -81,13 +83,16 @@ export const patientController = {
     advance,
   } = req.body;
 
+  // Required
   if (!patient_id) {
     throw new AppError("patient_id is required", 400);
   }
 
-  // ✅ validate only if provided
-  if (test_ids && (!Array.isArray(test_ids) || test_ids.length === 0)) {
-    throw new AppError("test_ids must be non-empty array", 400);
+  // Validate test_ids only if provided
+  if (test_ids !== undefined) {
+    if (!Array.isArray(test_ids) || test_ids.length === 0) {
+      throw new AppError("test ids must be a non-empty array", 400);
+    }
   }
 
   const data = {
@@ -112,7 +117,7 @@ export const patientController = {
   res.status(response.statusCode).json(response);
 }),
 
-  // ✅ Delete Patient
+  // Delete Patient
   deletePatient: asyncHandler(async (req, res) => {
 
     const { patient_id } = req.params;

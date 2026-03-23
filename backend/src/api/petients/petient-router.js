@@ -10,7 +10,7 @@ router.post("/add",  patientController.createPatient);
 router.get("/get",  patientController.getPatientsByLab);
 
 // Update
-router.put("/update",  patientController.updatePatient);
+router.put("/update/:patient_id",  patientController.updatePatient);
 
 // Delete
 router.delete("/delete/:patient_id",  patientController.deletePatient);

@@ -3,11 +3,11 @@ import { testController } from "./test-controller.js"
 
 export const testRouter = (() => {
   const router = express.Router();
-router.post("/tests", testController.createTest);
-router.get("/tests", testController.getTests);
-router.get("/tests/:test_id", testController.getTestById);
-router.patch("/tests/:test_id", testController.updateTest);
-router.delete("/tests/:test_id", testController.deleteTest);
+router.post("/add", testController.createTest);
+router.get("/get", testController.getTests);
+router.get("/get-by-id/:test_id", testController.getTestById);
+router.patch("/update/:test_id", testController.updateTest);
+router.delete("/delete/:test_id", testController.deleteTest);
 
  return router;
 })();

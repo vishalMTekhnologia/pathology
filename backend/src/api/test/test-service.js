@@ -7,22 +7,29 @@ export const testService = {
   // ✅ Create Test
   createTest: async (data) => {
 
-    const sql = `CALL CreateTest(?,?,?,?,?,?)`;
+    const sql = `
+      INSERT INTO tbl_test (
+        test_code,
+        test_name,
+        test_description,
+        created_at,
+        created_by
+      ) VALUES (?, ?, ?, ?, ?)
+    `;
 
     const values = [
       data.test_code ?? null,
       data.test_name,
       data.test_description,
-      data.status ?? 1,
       data.created_at,
       data.created_by
     ];
 
     try {
-      const [result] = await query(sql, values);
+      const result = await query(sql, values);
 
       return ResponseBuilder.success(
-        result?.[0]?.[0] || null,
+        { test_id: result.insertId },
         "Test created successfully"
       );
 
@@ -34,13 +41,18 @@ export const testService = {
   // ✅ Get All Tests
   getTests: async () => {
 
-    const sql = `CALL GetTests()`;
+    const sql = `
+      SELECT *
+      FROM tbl_test
+      WHERE deleted_at IS NULL
+      ORDER BY test_id DESC
+    `;
 
     try {
-      const [rows] = await query(sql);
+      const rows = await query(sql);
 
       return ResponseBuilder.success(
-        rows[0] || [],
+        rows,
         "Tests fetched successfully"
       );
 
@@ -52,14 +64,17 @@ export const testService = {
   // ✅ Get By ID
   getTestById: async (test_id) => {
 
-    const sql = `CALL GetTestById(?)`;
+    const sql = `
+      SELECT *
+      FROM tbl_test
+      WHERE test_id = ? AND deleted_at IS NULL
+    `;
 
     try {
-      const [rows] = await query(sql, [test_id]);
+      const rows = await query(sql, [test_id]);
 
       return ResponseBuilder.success(
-        rows[0]?.[0] || null,
-        "Test fetched successfully"
+        "Test fetched successfully",rows[0] || null,
       );
 
     } catch (err) {
@@ -67,19 +82,29 @@ export const testService = {
     }
   },
 
-  // ✅ Update Test
+  // ✅ Update Test (Partial Update)
   updateTest: async (data) => {
 
-    const sql = `CALL UpdateTest(?,?,?,?,?,?,?)`;
+    const sql = `
+      UPDATE tbl_test
+      SET
+        test_code = COALESCE(?, test_code),
+        test_name = COALESCE(?, test_name),
+        test_description = COALESCE(?, test_description),
+        status = COALESCE(?, status),
+        updated_at = ?,
+        updated_by = ?
+      WHERE test_id = ? AND deleted_at IS NULL
+    `;
 
     const values = [
-      data.test_id,
       data.test_code ?? null,
       data.test_name ?? null,
       data.test_description ?? null,
       data.status ?? null,
       data.updated_at,
-      data.updated_by
+      data.updated_by,
+      data.test_id
     ];
 
     try {
@@ -95,13 +120,17 @@ export const testService = {
     }
   },
 
-  // ✅ Delete Test
+  // ✅ Delete Test (Soft Delete)
   deleteTest: async (test_id, deleted_at, deleted_by) => {
-
-    const sql = `CALL DeleteTest(?,?,?)`;
-
+    const sql = `
+      UPDATE tbl_test
+      SET
+        deleted_at = ?,
+        deleted_by = ?
+      WHERE test_id = ?
+    `;
     try {
-      await query(sql, [test_id, deleted_at, deleted_by]);
+      await query(sql, [deleted_at, deleted_by, test_id]);
 
       return ResponseBuilder.success(
         null,

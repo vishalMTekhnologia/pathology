@@ -1,64 +1,93 @@
-// PASTE YOUR Employees.jsx CODE HERE FROM THE CODE YOU SAVED IN NOTEPAD
-// Full code was provided in the conversation above
 // src/pages/AdminPages/Employees.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, X, Search, Filter, Download, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { Pencil, Trash2, X, Search, Filter, Download, ChevronLeft, ChevronRight, UserPlus, Loader2 } from "lucide-react";
+
+import {
+    fetchBloodCollectors,
+    updateBloodCollector, deleteBloodCollector, addBloodCollector, resetBloodCollectorsError,
+    fetchLabTechnicians,
+    updateLabTechnician,  deleteLabTechnician,  addLabTechnician,  resetLabTechniciansError,
+} from "../../features/admin/employeesSlice";
 
 const TABS = ["Blood Collectors", "Lab Technicians", "Doctors"];
 
-const initialData = {
-    "Blood Collectors": [
-        { id: 1, name: "John Doe", mobile: "+91 9123456780", email: "john@lab.com", gender: "Male", dob: "1990-05-10", idType: "Aadhar Card", status: "Active" },
-        { id: 2, name: "Sara James", mobile: "+91 9871234560", email: "sara@lab.com", gender: "Female", dob: "1995-08-22", idType: "PAN Card", status: "Active" },
-        { id: 3, name: "Mike Johnson", mobile: "+91 9988776655", email: "mike@lab.com", gender: "Male", dob: "1988-11-15", idType: "Passport", status: "On Leave" },
-    ],
-    "Lab Technicians": [
-        { id: 1, name: "Priya Sharma", mobile: "+91 9876543211", email: "priya@lab.com", gender: "Female", dob: "1992-03-22", idType: "PAN Card", status: "Active" },
-        { id: 2, name: "Mark Wilson", mobile: "+91 9988776655", email: "mark@lab.com", gender: "Male", dob: "1988-11-15", idType: "Passport", status: "Active" },
-    ],
-    "Doctors": [
-        { id: 1, name: "Dr. Robert Brown", mobile: "+91 9876543210", email: "robert@lab.com", gender: "Male", dob: "1980-01-30", idType: "Medical License", status: "Active" },
-        { id: 2, name: "Dr. Anjali Mehta", mobile: "+91 9812345670", email: "anjali@lab.com", gender: "Female", dob: "1985-07-14", idType: "Aadhar Card", status: "Active" },
-    ],
-};
+// ── Static placeholder data for Doctors (not yet wired to an API) ─────────────
+const staticDoctors = [
+    { id: 1, name: "Dr. Robert Brown", mobile: "+91 9876543210", email: "robert@lab.com", gender: "Male",   dob: "1980-01-30", idType: "Medical License", status: "Active" },
+    { id: 2, name: "Dr. Anjali Mehta", mobile: "+91 9812345670", email: "anjali@lab.com", gender: "Female", dob: "1985-07-14", idType: "Aadhar Card",     status: "Active" },
+];
 
-const empty = { name: "", mobile: "", email: "", gender: "", dob: "", idType: "", status: "Active" };
+const emptyForm = { name: "", mobile: "", email: "", gender: "", dob: "", idType: "", status: "Active" };
 
 const Employees = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState("Blood Collectors");
-    const [data, setData] = useState(initialData);
-    const [showModal, setShowModal] = useState(false);
-    const [editItem, setEditItem] = useState(null);
-    const [form, setForm] = useState(empty);
-    const [errors, setErrors] = useState({});
-    const [searchTerm, setSearchTerm] = useState("");
+    const dispatch = useDispatch();
+
+    // ── Redux state ────────────────────────────────────────────────────────────
+    const {
+        data:    bloodCollectors,
+        loading: loadingBC,
+        error:   errorBC,
+    } = useSelector((state) => state.employees.bloodCollectors);
+
+    const {
+        data:    labTechnicians,
+        loading: loadingLT,
+        error:   errorLT,
+    } = useSelector((state) => state.employees.labTechnicians);
+
+    // ── Local state ────────────────────────────────────────────────────────────
+    const [activeTab,   setActiveTab]   = useState("Blood Collectors");
+    const [doctors,     setDoctors]     = useState(staticDoctors);
+    const [showModal,   setShowModal]   = useState(false);
+    const [editItem,    setEditItem]    = useState(null);
+    const [form,        setForm]        = useState(emptyForm);
+    const [errors,      setErrors]      = useState({});
+    const [searchTerm,  setSearchTerm]  = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const itemsPerPage = 5;
 
-    const employees = data[activeTab];
+    // ── Fetch on mount ─────────────────────────────────────────────────────────
+    useEffect(() => { dispatch(fetchBloodCollectors()); }, [dispatch]);
+    useEffect(() => { dispatch(fetchLabTechnicians());  }, [dispatch]);
 
-    const filteredEmployees = employees.filter(emp =>
-        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.mobile.includes(searchTerm)
+    // ── Derive employee list for active tab ───────────────────────────────────
+    const employeeMap = {
+        "Blood Collectors": bloodCollectors,
+        "Lab Technicians":  labTechnicians,
+        "Doctors":          doctors,
+    };
+    const employees = employeeMap[activeTab] ?? [];
+
+    const isLoading  = (activeTab === "Blood Collectors" && loadingBC) ||
+                       (activeTab === "Lab Technicians"  && loadingLT);
+    const activeError = activeTab === "Blood Collectors" ? errorBC
+                       : activeTab === "Lab Technicians"  ? errorLT
+                       : null;
+
+    const filteredEmployees = employees.filter((emp) =>
+        emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.mobile?.includes(searchTerm)
     );
 
-    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfLastItem  = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentEmployees = filteredEmployees.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+    const totalPages       = Math.ceil(filteredEmployees.length / itemsPerPage);
 
+    // ── Validation ────────────────────────────────────────────────────────────
     const validate = () => {
         const e = {};
-        if (!form.name.trim()) e.name = "Name is required";
+        if (!form.name.trim())   e.name   = "Name is required";
         if (!form.mobile.trim()) e.mobile = "Mobile is required";
         else if (!/^\+91 [0-9]{10}$/.test(form.mobile)) e.mobile = "Invalid format (+91 XXXXXXXXXX)";
-        if (!form.email.trim()) e.email = "Email is required";
-        else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Invalid email";
-        if (!form.gender) e.gender = "Select gender";
-        if (!form.dob) e.dob = "DOB is required";
+        if (!form.email.trim())  e.email  = "Email is required";
+        else if (!/\S+@\S+\.\S+/.test(form.email))      e.email  = "Invalid email";
+        if (!form.gender)        e.gender = "Select gender";
+        if (!form.dob)           e.dob    = "DOB is required";
         if (!form.idType.trim()) e.idType = "ID Type is required";
         setErrors(e);
         return Object.keys(e).length === 0;
@@ -71,41 +100,70 @@ const Employees = () => {
         setShowModal(true);
     };
 
+    // ── Save ──────────────────────────────────────────────────────────────────
     const handleSave = () => {
         if (!validate()) return;
-        setData(prev => {
-            const list = prev[activeTab];
-            if (editItem) {
-                return { ...prev, [activeTab]: list.map(e => e.id === editItem.id ? { ...form, id: editItem.id } : e) };
-            } else {
-                const newId = list.length ? Math.max(...list.map(e => e.id)) + 1 : 1;
-                return { ...prev, [activeTab]: [...list, { ...form, id: newId }] };
-            }
-        });
+
+        if (activeTab === "Blood Collectors") {
+            editItem
+                ? dispatch(updateBloodCollector({ ...form, id: editItem.id }))
+                : dispatch(addBloodCollector({ ...form, id: Date.now() }));
+        } else if (activeTab === "Lab Technicians") {
+            editItem
+                ? dispatch(updateLabTechnician({ ...form, id: editItem.id }))
+                : dispatch(addLabTechnician({ ...form, id: Date.now() }));
+        } else {
+            setDoctors((prev) =>
+                editItem
+                    ? prev.map((e) => e.id === editItem.id ? { ...form, id: editItem.id } : e)
+                    : [...prev, { ...form, id: Date.now() }]
+            );
+        }
+
         setShowModal(false);
         setSearchTerm("");
         setCurrentPage(1);
     };
 
+    // ── Delete ────────────────────────────────────────────────────────────────
     const handleDelete = (id) => {
-        if (window.confirm("Are you sure you want to delete this employee?")) {
-            setData(prev => ({ ...prev, [activeTab]: prev[activeTab].filter(e => e.id !== id) }));
+        if (!window.confirm("Are you sure you want to delete this employee?")) return;
+        if      (activeTab === "Blood Collectors") dispatch(deleteBloodCollector(id));
+        else if (activeTab === "Lab Technicians")  dispatch(deleteLabTechnician(id));
+        else setDoctors((prev) => prev.filter((e) => e.id !== id));
+    };
+
+    // ── Retry ─────────────────────────────────────────────────────────────────
+    const handleRetry = () => {
+        if (activeTab === "Blood Collectors") {
+            dispatch(resetBloodCollectorsError());
+            dispatch(fetchBloodCollectors());
+        } else if (activeTab === "Lab Technicians") {
+            dispatch(resetLabTechniciansError());
+            dispatch(fetchLabTechnicians());
         }
     };
 
     const handleChange = (field, value) => {
-        setForm(prev => ({ ...prev, [field]: value }));
-        if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
+        setForm((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
     };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case "Active": return "bg-green-100 text-green-700";
+            case "Active":   return "bg-green-100 text-green-700";
             case "On Leave": return "bg-amber-100 text-amber-700";
-            default: return "bg-gray-100 text-gray-700";
+            default:         return "bg-gray-100 text-gray-700";
         }
     };
 
+    const tabCount = (tab) => {
+        if (tab === "Blood Collectors") return loadingBC ? "…" : bloodCollectors.length;
+        if (tab === "Lab Technicians")  return loadingLT ? "…" : labTechnicians.length;
+        return doctors.length;
+    };
+
+    // ── Render ─────────────────────────────────────────────────────────────────
     return (
         <div className="font-sans space-y-6">
             {/* Header */}
@@ -120,8 +178,6 @@ const Employees = () => {
                         <Download size={16} />
                         Export
                     </button>
-
-                    {/* ✅ Register new employee via API */}
                     <button
                         onClick={() => navigate("/employees/register")}
                         className="flex items-center gap-2 bg-cyan-600 text-white px-5 py-2.5 rounded-lg
@@ -137,23 +193,24 @@ const Employees = () => {
 
             {/* Main Card */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
                 {/* Tabs */}
                 <div className="border-b border-gray-200 bg-gray-50/50">
                     <div className="flex overflow-x-auto scrollbar-hide px-6">
-                        {TABS.map(tab => (
+                        {TABS.map((tab) => (
                             <button key={tab}
                                 onClick={() => { setActiveTab(tab); setSearchTerm(""); setCurrentPage(1); }}
                                 className={`px-5 py-4 text-sm font-medium whitespace-nowrap border-b-2
                                          transition-all duration-200 flex items-center gap-2
                                          ${activeTab === tab
-                                        ? 'border-cyan-600 text-cyan-700'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
+                                            ? "border-cyan-600 text-cyan-700"
+                                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                         }`}
                             >
                                 {tab}
                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full
-                                    ${activeTab === tab ? 'bg-cyan-100 text-cyan-700' : 'bg-gray-200 text-gray-600'}`}>
-                                    {data[tab].length}
+                                    ${activeTab === tab ? "bg-cyan-100 text-cyan-700" : "bg-gray-200 text-gray-600"}`}>
+                                    {tabCount(tab)}
                                 </span>
                             </button>
                         ))}
@@ -165,12 +222,15 @@ const Employees = () => {
                     <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input type="text" placeholder="Search by name, email, or mobile..."
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or mobile..."
                                 value={searchTerm}
                                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg
                                          text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200
-                                         transition-all duration-200" />
+                                         transition-all duration-200"
+                            />
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                             <button className="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white
@@ -191,75 +251,98 @@ const Employees = () => {
                     </div>
                 </div>
 
+                {/* Loading */}
+                {isLoading && (
+                    <div className="flex items-center justify-center gap-3 py-16 text-gray-500">
+                        <Loader2 size={22} className="animate-spin text-cyan-600" />
+                        <span className="text-sm">Loading {activeTab.toLowerCase()}…</span>
+                    </div>
+                )}
+
+                {/* Error */}
+                {!isLoading && activeError && (
+                    <div className="mx-6 my-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <X size={16} className="shrink-0" />
+                            <span>Failed to load data: {activeError}</span>
+                        </div>
+                        <button onClick={handleRetry}
+                            className="text-xs font-medium text-red-700 underline hover:no-underline shrink-0">
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-gray-50 border-y border-gray-200">
-                                {["NAME", "MOBILE", "EMAIL", "GENDER", "DOB", "ID TYPE", "STATUS", "ACTIONS"].map(h => (
-                                    <th key={h} className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        {h}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {currentEmployees.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Search size={24} className="text-gray-400" />
-                                            <p>No employees found</p>
-                                            <button
-                                                onClick={() => navigate("/employees/register")}
-                                                className="text-cyan-600 hover:text-cyan-700 font-medium">
-                                                Register a new employee
-                                            </button>
-                                        </div>
-                                    </td>
+                {!isLoading && !activeError && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 border-y border-gray-200">
+                                    {["NAME", "MOBILE", "EMAIL", "GENDER", "DOB", "ID TYPE", "STATUS", "ACTIONS"].map((h) => (
+                                        <th key={h} className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            {h}
+                                        </th>
+                                    ))}
                                 </tr>
-                            ) : (
-                                currentEmployees.map((emp) => (
-                                    <tr key={emp.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{emp.name}</td>
-                                        <td className="px-6 py-4 text-gray-600">{emp.mobile}</td>
-                                        <td className="px-6 py-4 text-gray-600">{emp.email}</td>
-                                        <td className="px-6 py-4 text-gray-600">{emp.gender}</td>
-                                        <td className="px-6 py-4 text-gray-600">{emp.dob}</td>
-                                        <td className="px-6 py-4 text-gray-600">{emp.idType}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(emp.status)}`}>
-                                                {emp.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => openEdit(emp)}
-                                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button onClick={() => handleDelete(emp.id)}
-                                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                                                    <Trash2 size={14} />
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {currentEmployees.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Search size={24} className="text-gray-400" />
+                                                <p>No employees found</p>
+                                                <button onClick={() => navigate("/employees/register")}
+                                                    className="text-cyan-600 hover:text-cyan-700 font-medium">
+                                                    Register a new employee
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ) : (
+                                    currentEmployees.map((emp) => (
+                                        <tr key={emp.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                                            <td className="px-6 py-4 font-medium text-gray-900">{emp.name   || "—"}</td>
+                                            <td className="px-6 py-4 text-gray-600">{emp.mobile || "—"}</td>
+                                            <td className="px-6 py-4 text-gray-600">{emp.email  || "—"}</td>
+                                            <td className="px-6 py-4 text-gray-600">{emp.gender || "—"}</td>
+                                            <td className="px-6 py-4 text-gray-600">{emp.dob    || "—"}</td>
+                                            <td className="px-6 py-4 text-gray-600">{emp.idType || "—"}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(emp.status)}`}>
+                                                    {emp.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={() => openEdit(emp)}
+                                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(emp.id)}
+                                                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
 
                 {/* Pagination */}
-                {filteredEmployees.length > 0 && (
+                {filteredEmployees.length > 0 && !isLoading && !activeError && (
                     <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50
                                   flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <p className="text-sm text-gray-500">
                             Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredEmployees.length)} of {filteredEmployees.length} entries
                         </p>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                                 disabled={currentPage === 1}
                                 className="p-2 border border-gray-200 rounded-lg bg-white text-gray-600
                                          hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
@@ -268,11 +351,11 @@ const Employees = () => {
                             {[...Array(totalPages)].map((_, i) => (
                                 <button key={i} onClick={() => setCurrentPage(i + 1)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                                        ${currentPage === i + 1 ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                                        ${currentPage === i + 1 ? "bg-cyan-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>
                                     {i + 1}
                                 </button>
                             ))}
-                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                                 disabled={currentPage === totalPages}
                                 className="p-2 border border-gray-200 rounded-lg bg-white text-gray-600
                                          hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
@@ -283,10 +366,10 @@ const Employees = () => {
                 )}
             </div>
 
-            {/* Edit Modal (local data only) */}
+            {/* Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                    onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+                    onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
                     <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
                         <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
                             <div>
@@ -304,28 +387,28 @@ const Employees = () => {
                                 <div className="col-span-1 md:col-span-2">
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name <span className="text-red-500">*</span></label>
                                     <input placeholder="Enter full name" value={form.name}
-                                        onChange={e => handleChange("name", e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.name ? 'border-red-400' : 'border-gray-200'}`} />
+                                        onChange={(e) => handleChange("name", e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.name ? "border-red-400" : "border-gray-200"}`} />
                                     {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile <span className="text-red-500">*</span></label>
                                     <input placeholder="+91 XXXXXXXXXX" value={form.mobile}
-                                        onChange={e => handleChange("mobile", e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.mobile ? 'border-red-400' : 'border-gray-200'}`} />
+                                        onChange={(e) => handleChange("mobile", e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.mobile ? "border-red-400" : "border-gray-200"}`} />
                                     {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
                                     <input placeholder="email@example.com" value={form.email}
-                                        onChange={e => handleChange("email", e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.email ? 'border-red-400' : 'border-gray-200'}`} />
+                                        onChange={(e) => handleChange("email", e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.email ? "border-red-400" : "border-gray-200"}`} />
                                     {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Gender <span className="text-red-500">*</span></label>
-                                    <select value={form.gender} onChange={e => handleChange("gender", e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer ${errors.gender ? 'border-red-400' : 'border-gray-200'}`}>
+                                    <select value={form.gender} onChange={(e) => handleChange("gender", e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer ${errors.gender ? "border-red-400" : "border-gray-200"}`}>
                                         <option value="">Select gender</option>
                                         <option>Male</option><option>Female</option><option>Other</option>
                                     </select>
@@ -333,14 +416,15 @@ const Employees = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date of Birth <span className="text-red-500">*</span></label>
-                                    <input type="date" value={form.dob} onChange={e => handleChange("dob", e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.dob ? 'border-red-400' : 'border-gray-200'}`} />
+                                    <input type="date" value={form.dob}
+                                        onChange={(e) => handleChange("dob", e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all ${errors.dob ? "border-red-400" : "border-gray-200"}`} />
                                     {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">ID Type <span className="text-red-500">*</span></label>
-                                    <select value={form.idType} onChange={e => handleChange("idType", e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer ${errors.idType ? 'border-red-400' : 'border-gray-200'}`}>
+                                    <select value={form.idType} onChange={(e) => handleChange("idType", e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg text-sm bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer ${errors.idType ? "border-red-400" : "border-gray-200"}`}>
                                         <option value="">Select ID type</option>
                                         <option>Aadhar Card</option><option>PAN Card</option><option>Passport</option>
                                         <option>Driving License</option><option>Medical License</option><option>Voter ID</option>
@@ -349,7 +433,7 @@ const Employees = () => {
                                 </div>
                                 <div className="col-span-1 md:col-span-2">
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Status</label>
-                                    <select value={form.status} onChange={e => handleChange("status", e.target.value)}
+                                    <select value={form.status} onChange={(e) => handleChange("status", e.target.value)}
                                         className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer">
                                         <option>Active</option><option>On Leave</option><option>Inactive</option>
                                     </select>

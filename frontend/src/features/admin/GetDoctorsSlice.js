@@ -17,7 +17,13 @@ export const fetchDoctors = createAsyncThunk(
                     },
                 }
             );
-            return response.data.data;
+            // Handle array or single object in 'message' or 'data'
+            const data = response.data;
+            if (Array.isArray(data.message)) return data.message;
+            if (Array.isArray(data.data)) return data.data;
+            if (data.message && typeof data.message === "object") return [data.message];
+            if (data.data && typeof data.data === "object") return [data.data];
+            return [];
         } catch (error) {
             return rejectWithValue(
                 error.response?.data?.message || "Failed to fetch doctors"

@@ -8,6 +8,7 @@ import Employees from "./pages/AdminPages/Employees";
 import AdminRegister from "./pages/AdminPages/AdminRegister";
 import TestManagement from "./pages/AdminPages/TestManagement";
 import PathologyDetails from "./pages/AdminPages/PathologyDetails";
+import PatientManagement from "./pages/AdminPages/PatientManagement";
 import TechDashboard from "./pages/LabTechnicianPages/Dashboard";
 import TechTest from "./pages/LabTechnicianPages/Test";
 import GenerateReport from "./pages/LabTechnicianPages/GenerateReport";
@@ -31,6 +32,7 @@ function App() {
           <Route path="employees/register" element={<AdminRegister />} />
           <Route path="test-management" element={<TestManagement />} />
           <Route path="pathology-details" element={<PathologyDetails />} />
+          <Route path="patient-management" element={<PatientManagement />} />
           <Route path="profile" element={<Profile />} />
           <Route path="technician-dashboard" element={<TechDashboard />} />
           <Route path="technician-tests" element={<TechTest />} />

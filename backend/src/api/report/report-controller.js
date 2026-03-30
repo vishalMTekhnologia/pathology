@@ -9,7 +9,6 @@ addReport: asyncHandler(async (req, res) => {
     patient_id,
     test_id,
     sample_collected_by,
-    status,
     readings,
   } = req.body;
 
@@ -21,7 +20,6 @@ addReport: asyncHandler(async (req, res) => {
     patient_id,
     test_id,
     sample_collected_by,
-    status,
     readings,
     created_at: getEpochTime(),
     created_by: req.user?.user_id

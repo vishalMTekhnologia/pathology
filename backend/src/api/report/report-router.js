@@ -4,6 +4,7 @@ import { reportController } from "./report-controller.js"
 export const reportRouter = (() => {
   const router = express.Router();
 router.post("/add", reportController.addReport);
+// router.get("/get-report", reportController.)
 
    return router;
 })();

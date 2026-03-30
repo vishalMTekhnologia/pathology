@@ -43,7 +43,7 @@ export const patientService = {
     const sql = `CALL GetPatientsByLab(?)`;
 
     try {
-      const [rows] = await query(sql, [lab_id]);
+      const rows = await query(sql, [lab_id]);
 
       return ResponseBuilder.success(
         rows[0] || [],

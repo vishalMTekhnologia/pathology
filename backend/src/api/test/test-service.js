@@ -4,9 +4,8 @@ import { AppError } from "../../middlewares/app-error.js";
 
 export const testService = {
 
-  // ✅ Create Test
+  // Create Test
   createTest: async (data) => {
-
     const sql = `
       INSERT INTO tbl_test (
         test_code,
@@ -16,7 +15,6 @@ export const testService = {
         created_by
       ) VALUES (?, ?, ?, ?, ?)
     `;
-
     const values = [
       data.test_code ?? null,
       data.test_name,
@@ -38,7 +36,7 @@ export const testService = {
     }
   },
 
-  // ✅ Get All Tests
+  // Get All Tests
   getTests: async () => {
 
     const sql = `
@@ -61,7 +59,7 @@ export const testService = {
     }
   },
 
-  // ✅ Get By ID
+  // Get By ID
   getTestById: async (test_id) => {
 
     const sql = `
@@ -82,7 +80,7 @@ export const testService = {
     }
   },
 
-  // ✅ Update Test (Partial Update)
+  // Update Test (Partial Update)
   updateTest: async (data) => {
 
     const sql = `
@@ -120,7 +118,7 @@ export const testService = {
     }
   },
 
-  // ✅ Delete Test (Soft Delete)
+  // Delete Test (Soft Delete)
   deleteTest: async (test_id, deleted_at, deleted_by) => {
     const sql = `
       UPDATE tbl_test

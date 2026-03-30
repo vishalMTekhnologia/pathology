@@ -8,6 +8,7 @@ import { userRouter } from "../../api/users/user-router.js";
 import { testRouter } from "../../api/test/test-router.js";
 import { categoryRouter } from "../../api/category/category-router.js";
 import { subCategoryRouter } from "../../api/sub-category/sub-category-router.js";
+import { reportRouter } from "../../api/report/report-router.js";
 
 const router = express.Router();
 router.use("/auth", authRouter);
@@ -19,6 +20,7 @@ router.use("/doctore", doctoreRouter);
 router.use("/petient", petientRouter);
 router.use("/test", testRouter);
 router.use("/category", categoryRouter)
-router.use("/sub-category", subCategoryRouter)
+router.use("/sub-category", subCategoryRouter);
+router.use("/report", reportRouter)
 
 export default router;

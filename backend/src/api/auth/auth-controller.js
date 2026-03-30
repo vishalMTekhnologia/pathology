@@ -97,7 +97,7 @@ export const authController = {
     return res.status(result.statusCode).json(result);
   }),
 
-  // Reftresh Token
+  // Refresh Token
   refreshToken: asyncHandler(async (req, res) => {
     const updatedAt = getEpochTime();
     const clientIsWeb = isWebClient(req);
@@ -339,7 +339,7 @@ export const authController = {
     return res.status(response.statusCode).json(response);
   }),
 
-  //  update user detials
+  //  update user details
   updateUser: asyncHandler(async (req, res) => {
     const { user_id } = req.query;
     const { role_id, full_name, user_email, contact_no, address } = req.body;

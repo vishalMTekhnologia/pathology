@@ -17,8 +17,6 @@ export const doctorController = {
   addDoctors: asyncHandler(async (req, res) => {
     doctorController.checkAdmin(req);
     const lab_id = req.user?.lab_id;
-     console.log("req.user:", req.user);
-  console.log("lab_id:", lab_id);
 
     const {
       doc_name,
@@ -103,21 +101,11 @@ export const doctorController = {
     const response = await doctorService.getDoctors(lab_id);
     res.status(response.statusCode).json(response);
   }),
-//   getClassById: asyncHandler(async (req, res) => {
-//   const { class_id } = req.params;
-//   const response = await classService.getClassById(Number(class_id));
-//   return res.status(response.statusCode).json(response);
-// }),
-
 
   getDoctorById: asyncHandler(async (req, res) => {
-
     doctorController.checkAdmin(req);
-
     const { doc_id } = req.query;
-
     const response = await doctorService.getDoctorById(doc_id);
-
     res.status(response.statusCode).json(response);
   })
 

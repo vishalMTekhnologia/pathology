@@ -10,7 +10,7 @@ import { fetchTests, addTest, updateTest, deleteTest, resetTestState } from "../
 import { fetchCategories, addCategory, resetCategoryState } from "../../features/admin/CategorySlice";
 
 const PRIMARY = "#0891b2";
-const TABS = ["Categories", "Tests", "Test Parameters", "Pricing"];
+const TABS = ["Tests", "Categories", "Test Parameters", "Pricing"];
 
 // ── Static Data for tabs without APIs ─────────────────────────────────────────
 const initParameters = [

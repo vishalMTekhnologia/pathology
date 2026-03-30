@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
     LayoutDashboard, Users, FlaskConical,
     Settings, UserCircle, ChevronRight,
-    ClipboardList, FileText, Beaker, Stethoscope
+    ClipboardList, FileText, Beaker, Stethoscope, UserPlus
 } from "lucide-react";
 
 const adminLinks = [
@@ -13,6 +13,7 @@ const adminLinks = [
     { label: "Pathology Details", icon: <FlaskConical size={18} />, path: "/pathology-details" },
     // { label: "Profile", icon: <UserCircle size={18} />, path: "/profile" },
     { label: "Refer Doctor", icon: <Stethoscope size={18} />, path: "/refer-doctor" },
+    { label: "Patient Management", icon: <UserPlus size={18} />, path: "/patient-management" },
 ];
 
 const technicianLinks = [

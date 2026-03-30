@@ -1,32 +1,18 @@
-// PASTE YOUR TestManagement.jsx CODE HERE FROM THE CODE YOU SAVED IN NOTEPAD
 // src/pages/AdminPages/TestManagement.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
     Plus, Pencil, Trash2, X, Search, Filter,
     ChevronLeft, ChevronRight, Download, Tag,
-    Beaker, FlaskConical, DollarSign, Layers
+    Beaker, FlaskConical, DollarSign, Layers, Loader2
 } from "lucide-react";
+import { fetchTests, addTest, updateTest, deleteTest, resetTestState } from "../../features/admin/TestSlice";
+import { fetchCategories, addCategory, resetCategoryState } from "../../features/admin/CategorySlice";
 
 const PRIMARY = "#0891b2";
 const TABS = ["Categories", "Tests", "Test Parameters", "Pricing"];
 
-// ── Initial Data ──────────────────────────────────────────────
-const initCategories = [
-    { id: 1, name: "Haematology", description: "Blood related tests", testsCount: 12 },
-    { id: 2, name: "Biochemistry", description: "Chemical analysis of blood/urine", testsCount: 18 },
-    { id: 3, name: "Microbiology", description: "Infection and culture tests", testsCount: 9 },
-    { id: 4, name: "Endocrinology", description: "Hormone level tests", testsCount: 7 },
-];
-
-const initTests = [
-    { id: 1, name: "Complete Blood Count (CBC)", category: "Haematology", duration: "4 hrs", status: "Available" },
-    { id: 2, name: "Blood Glucose Fasting", category: "Biochemistry", duration: "2 hrs", status: "Available" },
-    { id: 3, name: "Lipid Profile", category: "Biochemistry", duration: "6 hrs", status: "Available" },
-    { id: 4, name: "Urine Routine", category: "Microbiology", duration: "2 hrs", status: "Available" },
-    { id: 5, name: "Thyroid Profile (T3,T4,TSH)", category: "Endocrinology", duration: "8 hrs", status: "Unavailable" },
-    { id: 6, name: "Liver Function Test (LFT)", category: "Biochemistry", duration: "6 hrs", status: "Available" },
-];
-
+// ── Static Data for tabs without APIs ─────────────────────────────────────────
 const initParameters = [
     { id: 1, test: "Complete Blood Count (CBC)", parameterName: "WBC", unit: "cells/mcL", normalRange: "4,500-11,000" },
     { id: 2, test: "Complete Blood Count (CBC)", parameterName: "RBC", unit: "million cells/mcL", normalRange: "4.5-5.9" },
@@ -54,20 +40,50 @@ const tabIcons = {
 };
 
 const TestManagement = () => {
+    const dispatch = useDispatch();
+
+    // Redux state
+    const { tests: apiTests, loading: testsLoading, actionLoading: testActionLoading } = useSelector(state => state.tests);
+    const { categories: apiCategories, loading: categoriesLoading, actionLoading: categoryActionLoading } = useSelector(state => state.categories);
+
     const [activeTab, setActiveTab] = useState("Categories");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(5);
 
-    // Data states
-    const [categories, setCategories] = useState(initCategories);
-    const [tests, setTests] = useState(initTests);
+    // Static data states (for tabs without APIs)
     const [parameters, setParameters] = useState(initParameters);
     const [pricing, setPricing] = useState(initPricing);
 
     // Modal state
-    const [modal, setModal] = useState(null); // { type, item }
+    const [modal, setModal] = useState(null);
     const [form, setForm] = useState({});
+
+    // Fetch data on mount
+    useEffect(() => {
+        dispatch(fetchTests());
+        dispatch(fetchCategories());
+    }, [dispatch]);
+
+    // Map API data to table format
+    const categories = (Array.isArray(apiCategories) ? apiCategories : []).map(cat => ({
+        id: cat.category_id || cat.id,
+        name: cat.category_name || cat.name,
+        description: cat.category_discription || cat.description || "",
+        testsCount: cat.tests_count || cat.testsCount || 0,
+        test_id: cat.test_id,
+        price: cat.price,
+    }));
+
+    const tests = (Array.isArray(apiTests) ? apiTests : []).map(t => ({
+        id: t.test_id || t.id,
+        test_code: t.test_code || "",
+        name: t.test_name || t.name,
+        description: t.test_description || t.description || "",
+        category: t.category || "",
+        duration: t.duration || "–",
+        status: t.status || "Available",
+    }));
 
     const openAdd = () => {
         setForm({});
@@ -79,39 +95,72 @@ const TestManagement = () => {
     };
     const closeModal = () => setModal(null);
 
-    const handleDelete = (setter, id) => {
-        if (window.confirm("Are you sure you want to delete this?")) {
-            setter(prev => prev.filter(x => x.id !== id));
+    const handleDeleteItem = async (tab, id) => {
+        if (!window.confirm("Are you sure you want to delete this?")) return;
+
+        if (tab === "Tests") {
+            await dispatch(deleteTest(id));
+            dispatch(fetchTests());
+        } else if (tab === "Test Parameters") {
+            setParameters(prev => prev.filter(x => x.id !== id));
+        } else if (tab === "Pricing") {
+            setPricing(prev => prev.filter(x => x.id !== id));
+        } else if (tab === "Categories") {
+            // No delete API for categories, remove from local view
+            // (will reappear on refresh since there's no backend delete)
         }
     };
 
     const newId = (list) => list.length ? Math.max(...list.map(x => x.id)) + 1 : 1;
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (activeTab === "Categories") {
-            if (!form.name) return alert("Name is required");
-            setCategories(prev => modal.type === "edit"
-                ? prev.map(x => x.id === modal.item.id ? { ...x, ...form } : x)
-                : [...prev, { ...form, id: newId(prev), testsCount: 0 }]);
+            if (!form.name) return alert("Category Name is required");
+            // Find the test_id from the selected test
+            const selectedTest = tests.find(t => t.name === form.linkedTest || t.id === form.test_id);
+            const payload = {
+                test_id: selectedTest?.id || form.test_id || "1",
+                category_name: form.name,
+                category_discription: form.description || "",
+                price: Number(form.price) || 0,
+            };
+            await dispatch(addCategory(payload));
+            dispatch(fetchCategories());
         }
+
         if (activeTab === "Tests") {
-            if (!form.name || !form.category) return alert("Name and Category are required");
-            setTests(prev => modal.type === "edit"
-                ? prev.map(x => x.id === modal.item.id ? { ...x, ...form } : x)
-                : [...prev, { ...form, id: newId(prev) }]);
+            if (!form.name) return alert("Test Name is required");
+            if (modal.type === "edit") {
+                await dispatch(updateTest({
+                    id: modal.item.id,
+                    test_code: form.test_code || "",
+                    test_name: form.name,
+                    test_description: form.description || "",
+                }));
+            } else {
+                await dispatch(addTest({
+                    test_code: form.test_code || "",
+                    test_name: form.name,
+                    test_description: form.description || "",
+                }));
+            }
+            dispatch(fetchTests());
         }
+
         if (activeTab === "Test Parameters") {
             if (!form.test || !form.parameterName) return alert("Test and Parameter Name are required");
             setParameters(prev => modal.type === "edit"
                 ? prev.map(x => x.id === modal.item.id ? { ...x, ...form } : x)
                 : [...prev, { ...form, id: newId(prev) }]);
         }
+
         if (activeTab === "Pricing") {
             if (!form.test || !form.price) return alert("Test and Price are required");
             setPricing(prev => modal.type === "edit"
                 ? prev.map(x => x.id === modal.item.id ? { ...x, ...form } : x)
                 : [...prev, { ...form, id: newId(prev) }]);
         }
+
         closeModal();
     };
 
@@ -130,6 +179,7 @@ const TestManagement = () => {
     };
 
     const currentData = getCurrentData();
+    const isLoading = (activeTab === "Tests" && testsLoading) || (activeTab === "Categories" && categoriesLoading);
 
     // Filter based on search
     const filteredData = currentData.filter(item => {
@@ -141,7 +191,8 @@ const TestManagement = () => {
         }
         if (activeTab === "Tests") {
             return item.name?.toLowerCase().includes(searchLower) ||
-                item.category?.toLowerCase().includes(searchLower);
+                item.test_code?.toLowerCase().includes(searchLower) ||
+                item.description?.toLowerCase().includes(searchLower);
         }
         if (activeTab === "Test Parameters") {
             return item.parameterName?.toLowerCase().includes(searchLower) ||
@@ -260,191 +311,187 @@ const TestManagement = () => {
                     </div>
                 </div>
 
+                {/* Loading State */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-16">
+                        <Loader2 className="animate-spin text-cyan-600" size={32} />
+                        <span className="ml-3 text-gray-500">Loading {activeTab.toLowerCase()}...</span>
+                    </div>
+                )}
+
                 {/* Tables */}
-                <div className="overflow-x-auto">
-                    {/* Categories Table */}
-                    {activeTab === "Categories" && (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-gray-50 border-y border-gray-200">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category Name</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tests Count</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {currentItems.map(cat => (
-                                    <tr key={cat.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
-                                        <td className="px-6 py-4 font-semibold text-gray-900">{cat.name}</td>
-                                        <td className="px-6 py-4 text-gray-600">{cat.description}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                                {cat.testsCount} tests
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openEdit(cat)}
-                                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button onClick={() => handleDelete(setCategories, cat.id)}
-                                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
+                {!isLoading && (
+                    <div className="overflow-x-auto">
+                        {/* Categories Table */}
+                        {activeTab === "Categories" && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 border-y border-gray-200">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category Name</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
-                                ))}
-                                {currentItems.length === 0 && (
-                                    <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500">No categories found.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {currentItems.map(cat => (
+                                        <tr key={cat.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                                            <td className="px-6 py-4 font-semibold text-gray-900">{cat.name}</td>
+                                            <td className="px-6 py-4 text-gray-600">{cat.description}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    ₹{cat.price || 0}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => openEdit(cat)}
+                                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {currentItems.length === 0 && (
+                                        <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500">No categories found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
 
-                    {/* Tests Table */}
-                    {activeTab === "Tests" && (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-gray-50 border-y border-gray-200">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test Name</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {currentItems.map(test => (
-                                    <tr key={test.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{test.name}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                                {test.category}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-600">{test.duration}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold
-                                                ${test.status === "Available"
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {test.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openEdit(test)}
-                                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button onClick={() => handleDelete(setTests, test.id)}
-                                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
+                        {/* Tests Table */}
+                        {activeTab === "Tests" && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 border-y border-gray-200">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test Code</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test Name</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
-                                ))}
-                                {currentItems.length === 0 && (
-                                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No tests found.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {currentItems.map(test => (
+                                        <tr key={test.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                                            <td className="px-6 py-4">
+                                                <span className="bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    {test.test_code}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">{test.name}</td>
+                                            <td className="px-6 py-4 text-gray-600">{test.description}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => openEdit(test)}
+                                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteItem("Tests", test.id)}
+                                                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {currentItems.length === 0 && (
+                                        <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500">No tests found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
 
-                    {/* Parameters Table */}
-                    {activeTab === "Test Parameters" && (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-gray-50 border-y border-gray-200">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Parameter Name</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Unit</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Normal Range</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {currentItems.map(param => (
-                                    <tr key={param.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
-                                        <td className="px-6 py-4 text-gray-600">{param.test}</td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">{param.parameterName}</td>
-                                        <td className="px-6 py-4 text-gray-600">{param.unit}</td>
-                                        <td className="px-6 py-4 text-gray-700 font-mono">{param.normalRange}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openEdit(param)}
-                                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button onClick={() => handleDelete(setParameters, param.id)}
-                                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
+                        {/* Parameters Table */}
+                        {activeTab === "Test Parameters" && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 border-y border-gray-200">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Parameter Name</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Unit</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Normal Range</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
-                                ))}
-                                {currentItems.length === 0 && (
-                                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No parameters found.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {currentItems.map(param => (
+                                        <tr key={param.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                                            <td className="px-6 py-4 text-gray-600">{param.test}</td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">{param.parameterName}</td>
+                                            <td className="px-6 py-4 text-gray-600">{param.unit}</td>
+                                            <td className="px-6 py-4 text-gray-700 font-mono">{param.normalRange}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => openEdit(param)}
+                                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteItem("Test Parameters", param.id)}
+                                                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {currentItems.length === 0 && (
+                                        <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No parameters found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
 
-                    {/* Pricing Table */}
-                    {activeTab === "Pricing" && (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-gray-50 border-y border-gray-200">
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price (₹)</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Discounted (₹)</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tax %</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {currentItems.map(price => (
-                                    <tr key={price.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{price.test}</td>
-                                        <td className="px-6 py-4 text-gray-600">{price.category}</td>
-                                        <td className="px-6 py-4 font-semibold text-gray-900">₹{price.price}</td>
-                                        <td className="px-6 py-4 font-semibold text-green-600">₹{price.discountedPrice}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                                {price.tax}%
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => openEdit(price)}
-                                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
-                                                    <Pencil size={14} />
-                                                </button>
-                                                <button onClick={() => handleDelete(setPricing, price.id)}
-                                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
+                        {/* Pricing Table */}
+                        {activeTab === "Pricing" && (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 border-y border-gray-200">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Test</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price (₹)</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Discounted (₹)</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tax %</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
-                                ))}
-                                {currentItems.length === 0 && (
-                                    <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No pricing found.</td></tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {currentItems.map(price => (
+                                        <tr key={price.id} className="hover:bg-gray-50/80 transition-colors duration-150 group">
+                                            <td className="px-6 py-4 font-medium text-gray-900">{price.test}</td>
+                                            <td className="px-6 py-4 text-gray-600">{price.category}</td>
+                                            <td className="px-6 py-4 font-semibold text-gray-900">₹{price.price}</td>
+                                            <td className="px-6 py-4 font-semibold text-green-600">₹{price.discountedPrice}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    {price.tax}%
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => openEdit(price)}
+                                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteItem("Pricing", price.id)}
+                                                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {currentItems.length === 0 && (
+                                        <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No pricing found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                )}
 
                 {/* Pagination */}
-                {filteredData.length > 0 && (
+                {!isLoading && filteredData.length > 0 && (
                     <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50 
                                   flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <p className="text-sm text-gray-500">
@@ -521,7 +568,7 @@ const TestManagement = () => {
                                         <input
                                             value={form.name || ""}
                                             onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                                            placeholder="e.g. Haematology"
+                                            placeholder="e.g. PLATELET COUNT"
                                             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
                                                      focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
                                                      transition-all duration-200"
@@ -540,6 +587,38 @@ const TestManagement = () => {
                                                      transition-all duration-200"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                            Linked Test
+                                        </label>
+                                        <select
+                                            value={form.linkedTest || ""}
+                                            onChange={e => {
+                                                const selectedTest = tests.find(t => t.name === e.target.value);
+                                                setForm(p => ({ ...p, linkedTest: e.target.value, test_id: selectedTest?.id }));
+                                            }}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white
+                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
+                                                     transition-all duration-200 cursor-pointer"
+                                        >
+                                            <option value="">Select test</option>
+                                            {testNames.map(t => <option key={t}>{t}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                            Price (₹)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={form.price || ""}
+                                            onChange={e => setForm(p => ({ ...p, price: e.target.value }))}
+                                            placeholder="e.g. 200"
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
+                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
+                                                     transition-all duration-200"
+                                        />
+                                    </div>
                                 </>
                             )}
 
@@ -547,12 +626,25 @@ const TestManagement = () => {
                                 <>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                            Test Code <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            value={form.test_code || ""}
+                                            onChange={e => setForm(p => ({ ...p, test_code: e.target.value }))}
+                                            placeholder="e.g. A1, B2"
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
+                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
+                                                     transition-all duration-200"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                                             Test Name <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             value={form.name || ""}
                                             onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                                            placeholder="e.g. Complete Blood Count"
+                                            placeholder="e.g. CRP Test"
                                             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
                                                      focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
                                                      transition-all duration-200"
@@ -560,47 +652,17 @@ const TestManagement = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                            Category <span className="text-red-500">*</span>
+                                            Description
                                         </label>
-                                        <select
-                                            value={form.category || ""}
-                                            onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white
-                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
-                                                     transition-all duration-200 cursor-pointer"
-                                        >
-                                            <option value="">Select category</option>
-                                            {categoryNames.map(cat => <option key={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                            Duration
-                                        </label>
-                                        <input
-                                            value={form.duration || ""}
-                                            onChange={e => setForm(p => ({ ...p, duration: e.target.value }))}
-                                            placeholder="e.g. 4 hrs"
+                                        <textarea
+                                            value={form.description || ""}
+                                            onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                                            placeholder="e.g. Blood test"
+                                            rows={3}
                                             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm
                                                      focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
-                                                     transition-all duration-200"
+                                                     transition-all duration-200 resize-none"
                                         />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                            Status
-                                        </label>
-                                        <select
-                                            value={form.status || ""}
-                                            onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white
-                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 
-                                                     transition-all duration-200 cursor-pointer"
-                                        >
-                                            <option value="">Select status</option>
-                                            <option>Available</option>
-                                            <option>Unavailable</option>
-                                        </select>
                                     </div>
                                 </>
                             )}
@@ -751,9 +813,12 @@ const TestManagement = () => {
                                 Cancel
                             </button>
                             <button onClick={handleSave}
+                                disabled={testActionLoading || categoryActionLoading}
                                 className="px-5 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium
                                          hover:bg-cyan-700 active:bg-cyan-800 transition-all
-                                         shadow-lg shadow-cyan-600/30">
+                                         shadow-lg shadow-cyan-600/30 disabled:opacity-50 
+                                         disabled:cursor-not-allowed flex items-center gap-2">
+                                {(testActionLoading || categoryActionLoading) && <Loader2 className="animate-spin" size={14} />}
                                 {modal.type === "edit" ? "Save Changes" : "Add"}
                             </button>
                         </div>

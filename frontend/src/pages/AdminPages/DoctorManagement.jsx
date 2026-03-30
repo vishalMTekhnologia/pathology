@@ -264,7 +264,6 @@ const DoctorManagement = () => {
                     )}
                 </div>
             </div>
-
             {/* ── Add Modal ── */}
             {showAdd && (
                 <Modal

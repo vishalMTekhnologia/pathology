@@ -46,8 +46,7 @@ export const patientService = {
       const rows = await query(sql, [lab_id]);
 
       return ResponseBuilder.success(
-        rows[0] || [],
-        "Patients fetched successfully"
+        "Patients fetched successfully",  rows[0] || []
       );
 
     } catch (err) {

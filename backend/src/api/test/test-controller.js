@@ -41,6 +41,7 @@ export const testController = {
     res.status(response.statusCode).json(response);
   }),
 
+
   // ✅ Get Test By ID
   getTestById: asyncHandler(async (req, res) => {
 
@@ -54,6 +55,20 @@ export const testController = {
 
     res.status(response.statusCode).json(response);
   }),
+
+    // Get all test with category and sub category
+  getTestsWithCategories: asyncHandler(async (req, res) => {
+ const { test_id } = req.params;
+
+    if (!test_id) {
+      throw new AppError("Test id is required", 400);
+    }
+
+  const response = await testService.getTestsWithCategories(test_id);
+
+  res.status(response.statusCode).json(response);
+
+}),
 
   // ✅ Update Test
   updateTest: asyncHandler(async (req, res) => {

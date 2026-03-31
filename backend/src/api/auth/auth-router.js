@@ -36,7 +36,7 @@ export const authRouter = (() => {
   // update status
   router.put("/update-status", checkJWT, authController.updateUserStatus);
 
-  // update user detials
+  // update user details
   router.put(
     "/update",
     upload.fields([{ name: "userPhoto", maxCount: 1 }]),

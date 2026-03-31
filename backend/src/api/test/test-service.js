@@ -80,6 +80,23 @@ export const testService = {
     }
   },
 
+  // get all test with category and sub category
+  getTestsWithCategories: async (test_id) => {
+  try {
+    const [rows] = await query(`CALL GetTestsWithCategories(?)`,[test_id]);
+
+    const data = Array.isArray(rows?.[0]) ? rows[0] : rows;
+
+    return ResponseBuilder.success(
+      data,
+      "Tests with categories fetched successfully"
+    );
+
+  } catch (err) {
+    throw new AppError(err.message, 400);
+  }
+},
+
   // Update Test (Partial Update)
   updateTest: async (data) => {
 

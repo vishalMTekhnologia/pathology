@@ -2,7 +2,7 @@
 // src/pages/AdminPages/AdminRegister.jsx
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser, clearError, clearSuccess } from "../../features/auth/AuthSlice";
+import { registerUser, registerEmployee, clearError, clearSuccess } from "../../features/auth/AuthSlice";
 import { useNavigate } from "react-router-dom";
 import {
     Phone, Lock, Eye, EyeOff, UserCog,
@@ -69,8 +69,8 @@ const AdminRegister = () => {
         if (!full_name || !user_email || !contact_no || !address || !user_password || !confirmPassword) {
             setLocalError("Please fill in all required fields."); return;
         }
-        if (!/^\d{10}$/.test(contact_no)) { setLocalError("Enter a valid 10-digit contact number."); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user_email)) { setLocalError("Enter a valid email address."); return; }
+        if (!/^\d{7,15}$/.test(contact_no)) { setLocalError("Enter a valid contact number."); return; }
+        if (!user_email.includes("@") || user_email.trim().length < 3) { setLocalError("Enter a valid email address."); return; }
         if (user_password.length < 6) { setLocalError("Password must be at least 6 characters."); return; }
         if (user_password !== confirmPassword) { setLocalError("Passwords do not match."); return; }
 
@@ -82,7 +82,7 @@ const AdminRegister = () => {
         formData.append("address", address);
         formData.append("user_password", user_password);
         if (form.pro_pic) formData.append("pro_pic", form.pro_pic);
-        dispatch(registerUser(formData));
+        dispatch(registerEmployee(formData));
     };
 
     const displayError = localError || error;

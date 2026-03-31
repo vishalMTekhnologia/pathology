@@ -1,4 +1,4 @@
-// src/features/admin/CategorySlice.js
+// src/features/admin/SubCategorySlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -12,12 +12,12 @@ const authHeaders = () => {
     };
 };
 
-// ── Fetch all categories ──────────────────────────────────────────────────────
-export const fetchCategories = createAsyncThunk(
-    "categories/fetchCategories",
+// ── Fetch all sub-categories ──────────────────────────────────────────────────
+export const fetchSubCategories = createAsyncThunk(
+    "subCategories/fetchSubCategories",
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await axios.get(`${BASE_URL}/api/v1/category/get`, {
+            const { data } = await axios.get(`${BASE_URL}/api/v1/sub-category/get`, {
                 headers: authHeaders(),
             });
             if (Array.isArray(data.message)) return data.message;
@@ -26,64 +26,64 @@ export const fetchCategories = createAsyncThunk(
             if (data.data && typeof data.data === "object") return [data.data];
             return [];
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Failed to fetch categories");
+            return rejectWithValue(err.response?.data?.message || "Failed to fetch sub-categories");
         }
     }
 );
 
-// ── Add category ──────────────────────────────────────────────────────────────
-export const addCategory = createAsyncThunk(
-    "categories/addCategory",
-    async (categoryData, { rejectWithValue }) => {
+// ── Add sub-category ──────────────────────────────────────────────────────────
+export const addSubCategory = createAsyncThunk(
+    "subCategories/addSubCategory",
+    async (subCategoryData, { rejectWithValue }) => {
         try {
-            const { data } = await axios.post(`${BASE_URL}/api/v1/category/add`, categoryData, {
+            const { data } = await axios.post(`${BASE_URL}/api/v1/sub-category/add`, subCategoryData, {
                 headers: authHeaders(),
             });
             return data;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Failed to add category");
+            return rejectWithValue(err.response?.data?.message || "Failed to add sub-category");
         }
     }
 );
 
-// ── Update category ───────────────────────────────────────────────────────────
-export const updateCategory = createAsyncThunk(
-    "categories/updateCategory",
-    async ({ id, ...categoryData }, { rejectWithValue }) => {
+// ── Update sub-category ───────────────────────────────────────────────────────
+export const updateSubCategory = createAsyncThunk(
+    "subCategories/updateSubCategory",
+    async ({ id, ...subCategoryData }, { rejectWithValue }) => {
         try {
             const { data } = await axios.patch(
-                `${BASE_URL}/api/v1/category/update/${id}`,
-                categoryData,
+                `${BASE_URL}/api/v1/sub-category/update/${id}`,
+                subCategoryData,
                 { headers: authHeaders() }
             );
             return data;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Failed to update category");
+            return rejectWithValue(err.response?.data?.message || "Failed to update sub-category");
         }
     }
 );
 
-// ── Delete category ───────────────────────────────────────────────────────────
-export const deleteCategory = createAsyncThunk(
-    "categories/deleteCategory",
+// ── Delete sub-category ───────────────────────────────────────────────────────
+export const deleteSubCategory = createAsyncThunk(
+    "subCategories/deleteSubCategory",
     async (id, { rejectWithValue }) => {
         try {
             const { data } = await axios.delete(
-                `${BASE_URL}/api/v1/category/delete/${id}`,
+                `${BASE_URL}/api/v1/sub-category/delete/${id}`,
                 { headers: authHeaders() }
             );
             return { id, ...data };
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Failed to delete category");
+            return rejectWithValue(err.response?.data?.message || "Failed to delete sub-category");
         }
     }
 );
 
 // ── Slice ─────────────────────────────────────────────────────────────────────
-const categorySlice = createSlice({
-    name: "categories",
+const subCategorySlice = createSlice({
+    name: "subCategories",
     initialState: {
-        categories: [],
+        subCategories: [],
         loading: false,
         actionLoading: false,
         error: null,
@@ -91,7 +91,7 @@ const categorySlice = createSlice({
         success: false,
     },
     reducers: {
-        resetCategoryState(state) {
+        resetSubCategoryState(state) {
             state.error = null;
             state.actionError = null;
             state.success = false;
@@ -100,67 +100,67 @@ const categorySlice = createSlice({
     extraReducers: (builder) => {
         // Fetch all
         builder
-            .addCase(fetchCategories.pending, (state) => {
+            .addCase(fetchSubCategories.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchCategories.fulfilled, (state, { payload }) => {
+            .addCase(fetchSubCategories.fulfilled, (state, { payload }) => {
                 state.loading = false;
-                state.categories = payload;
+                state.subCategories = payload;
             })
-            .addCase(fetchCategories.rejected, (state, { payload }) => {
+            .addCase(fetchSubCategories.rejected, (state, { payload }) => {
                 state.loading = false;
                 state.error = payload;
             });
 
         // Add
         builder
-            .addCase(addCategory.pending, (state) => {
+            .addCase(addSubCategory.pending, (state) => {
                 state.actionLoading = true;
                 state.actionError = null;
                 state.success = false;
             })
-            .addCase(addCategory.fulfilled, (state) => {
+            .addCase(addSubCategory.fulfilled, (state) => {
                 state.actionLoading = false;
                 state.success = true;
             })
-            .addCase(addCategory.rejected, (state, { payload }) => {
+            .addCase(addSubCategory.rejected, (state, { payload }) => {
                 state.actionLoading = false;
                 state.actionError = payload;
             });
 
         // Update
         builder
-            .addCase(updateCategory.pending, (state) => {
+            .addCase(updateSubCategory.pending, (state) => {
                 state.actionLoading = true;
                 state.actionError = null;
                 state.success = false;
             })
-            .addCase(updateCategory.fulfilled, (state) => {
+            .addCase(updateSubCategory.fulfilled, (state) => {
                 state.actionLoading = false;
                 state.success = true;
             })
-            .addCase(updateCategory.rejected, (state, { payload }) => {
+            .addCase(updateSubCategory.rejected, (state, { payload }) => {
                 state.actionLoading = false;
                 state.actionError = payload;
             });
 
         // Delete
         builder
-            .addCase(deleteCategory.pending, (state) => {
+            .addCase(deleteSubCategory.pending, (state) => {
                 state.actionLoading = true;
                 state.actionError = null;
             })
-            .addCase(deleteCategory.fulfilled, (state) => {
+            .addCase(deleteSubCategory.fulfilled, (state) => {
                 state.actionLoading = false;
                 state.success = true;
             })
-            .addCase(deleteCategory.rejected, (state, { payload }) => {
+            .addCase(deleteSubCategory.rejected, (state, { payload }) => {
                 state.actionLoading = false;
                 state.actionError = payload;
             });
     },
 });
 
-export const { resetCategoryState } = categorySlice.actions;
-export default categorySlice.reducer;
+export const { resetSubCategoryState } = subCategorySlice.actions;
+export default subCategorySlice.reducer;

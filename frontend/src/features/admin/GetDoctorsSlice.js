@@ -1,3 +1,4 @@
+// src/features/admin/GetDoctorsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -17,12 +18,12 @@ export const fetchDoctors = createAsyncThunk(
                     },
                 }
             );
-            // Handle array or single object in 'message' or 'data'
             const data = response.data;
-            if (Array.isArray(data.message)) return data.message;
+            // API returns array in 'data' field — check that first
             if (Array.isArray(data.data)) return data.data;
-            if (data.message && typeof data.message === "object") return [data.message];
+            if (Array.isArray(data.message)) return data.message;
             if (data.data && typeof data.data === "object") return [data.data];
+            if (data.message && typeof data.message === "object") return [data.message];
             return [];
         } catch (error) {
             return rejectWithValue(

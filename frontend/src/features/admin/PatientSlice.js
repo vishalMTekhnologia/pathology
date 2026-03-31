@@ -20,7 +20,7 @@ export const fetchPatients = createAsyncThunk(
             const { data } = await axios.get(`${BASE_URL}/api/v1/petient/get`, {
                 headers: authHeaders(),
             });
-            // Handle array or single object in 'message' or 'data'
+            // API returns single object in 'message' for get — normalise to array
             if (Array.isArray(data.message)) return data.message;
             if (Array.isArray(data.data)) return data.data;
             if (data.message && typeof data.message === "object") return [data.message];
@@ -37,9 +37,11 @@ export const addPatient = createAsyncThunk(
     "patients/addPatient",
     async (patientData, { rejectWithValue }) => {
         try {
-            const { data } = await axios.post(`${BASE_URL}/api/v1/petient/add`, patientData, {
-                headers: authHeaders(),
-            });
+            const { data } = await axios.post(
+                `${BASE_URL}/api/v1/petient/add`,
+                patientData,
+                { headers: authHeaders() }
+            );
             return data;
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || "Failed to add patient");
@@ -52,9 +54,11 @@ export const updatePatient = createAsyncThunk(
     "patients/updatePatient",
     async ({ id, ...patientData }, { rejectWithValue }) => {
         try {
-            const { data } = await axios.put(`${BASE_URL}/api/v1/petient/update/${id}`, patientData, {
-                headers: authHeaders(),
-            });
+            const { data } = await axios.put(
+                `${BASE_URL}/api/v1/petient/update/${id}`,
+                patientData,
+                { headers: authHeaders() }
+            );
             return data;
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || "Failed to update patient");
@@ -67,12 +71,30 @@ export const deletePatient = createAsyncThunk(
     "patients/deletePatient",
     async (id, { rejectWithValue }) => {
         try {
-            const { data } = await axios.delete(`${BASE_URL}/api/v1/petient/delete/${id}`, {
-                headers: authHeaders(),
-            });
+            const { data } = await axios.delete(
+                `${BASE_URL}/api/v1/petient/delete/${id}`,
+                { headers: authHeaders() }
+            );
             return { id, ...data };
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || "Failed to delete patient");
+        }
+    }
+);
+
+// ── Fetch patient by ID ───────────────────────────────────────────────────────
+export const fetchPatientById = createAsyncThunk(
+    "patients/fetchPatientById",
+    async (id, { rejectWithValue }) => {
+        try {
+            const { data } = await axios.get(
+                `${BASE_URL}/api/v1/petient/get-by-id/${id}`,
+                { headers: authHeaders() }
+            );
+            // Return whichever field contains the object
+            return data.data || data.message || null;
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Failed to fetch patient");
         }
     }
 );
@@ -82,6 +104,7 @@ const patientSlice = createSlice({
     name: "patients",
     initialState: {
         patients: [],
+        selectedPatient: null,
         loading: false,
         actionLoading: false,
         error: null,
@@ -156,6 +179,12 @@ const patientSlice = createSlice({
             .addCase(deletePatient.rejected, (state, { payload }) => {
                 state.actionLoading = false;
                 state.actionError = payload;
+            });
+
+        // Fetch by ID
+        builder
+            .addCase(fetchPatientById.fulfilled, (state, { payload }) => {
+                state.selectedPatient = payload;
             });
     },
 });

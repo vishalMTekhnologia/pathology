@@ -20,7 +20,7 @@ const technicianLinks = [
     { label: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/technician-dashboard" },
     { label: "Tests", icon: <ClipboardList size={18} />, path: "/technician-tests" },
     { label: "Generate Report", icon: <FileText size={18} />, path: "/technician-report" },
-    { label: "Profile", icon: <UserCircle size={18} />, path: "/technician-profile" },
+    // { label: "Profile", icon: <UserCircle size={18} />, path: "/technician-profile" },
 ];
 
 const Sidebar = ({ sidebarWidth = 220 }) => {

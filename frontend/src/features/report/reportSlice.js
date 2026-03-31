@@ -16,7 +16,7 @@ export const fetchPatients = createAsyncThunk("report/fetchPatients",
     async (_, { rejectWithValue }) => {
         try {
             const res = await axios.get(`${BASE_URL}/api/v1/petient/get`, authHeader());
-            return res.data.message; // array of patients
+            return res.data.data; // ✅ was res.data.message (wrong — that's a string) // array of patients
         } catch (e) {
             return rejectWithValue(e.response?.data?.message || "Failed to fetch patients.");
         }
@@ -28,7 +28,7 @@ export const fetchTests = createAsyncThunk("report/fetchTests",
     async (_, { rejectWithValue }) => {
         try {
             const res = await axios.get(`${BASE_URL}/api/v1/test/get`, authHeader());
-            return res.data.message; // array of tests
+            return res.data.data; // array of tests
         } catch (e) {
             return rejectWithValue(e.response?.data?.message || "Failed to fetch tests.");
         }

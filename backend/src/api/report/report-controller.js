@@ -38,5 +38,12 @@ addReport: asyncHandler(async (req, res) => {
   });
 }),
 
+getFullReport: asyncHandler(async (req, res) => {
+
+  const response = await reportService.getFullReportService();
+
+  res.status(response.statusCode).json(response);
+
+}),
 
 };

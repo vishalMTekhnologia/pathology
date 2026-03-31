@@ -41,6 +41,19 @@ addReportService: async (data) => {
   return procRow;
 },
 
+getFullReportService: async () => {
+  try {
+    const [rows] = await query(`CALL GetFullReport()`);
 
+    const data = Array.isArray(rows?.[0]) ? rows[0] : rows;
+
+    return ResponseBuilder.success(
+      "Full report fetched successfully", data
+    );
+
+  } catch (err) {
+    throw new AppError(err.message, 400);
+  }
+},
 
 };

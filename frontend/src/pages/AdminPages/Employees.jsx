@@ -11,15 +11,12 @@ import {
     updateLabTechnician,  deleteLabTechnician,  addLabTechnician,  resetLabTechniciansError,
 } from "../../features/admin/employeesSlice";
 
-const TABS = ["Blood Collectors", "Lab Technicians", "Doctors"];
+const TABS = ["Lab Technicians","Blood Collectors" ];
 
 // ── Static placeholder data for Doctors (not yet wired to an API) ─────────────
-const staticDoctors = [
-    { id: 1, name: "Dr. Robert Brown", mobile: "+91 9876543210", email: "robert@lab.com", gender: "Male",   dob: "1980-01-30", idType: "Medical License", status: "Active" },
-    { id: 2, name: "Dr. Anjali Mehta", mobile: "+91 9812345670", email: "anjali@lab.com", gender: "Female", dob: "1985-07-14", idType: "Aadhar Card",     status: "Active" },
-];
 
-const emptyForm = { name: "", mobile: "", email: "", gender: "", dob: "", idType: "", status: "Active" };
+
+const emptyForm = { name: "", mobile: "", email: "", status: "Active" };
 
 const Employees = () => {
     const navigate = useNavigate();
@@ -40,7 +37,7 @@ const Employees = () => {
 
     // ── Local state ────────────────────────────────────────────────────────────
     const [activeTab,   setActiveTab]   = useState("Blood Collectors");
-    const [doctors,     setDoctors]     = useState(staticDoctors);
+    
     const [showModal,   setShowModal]   = useState(false);
     const [editItem,    setEditItem]    = useState(null);
     const [form,        setForm]        = useState(emptyForm);
@@ -57,7 +54,7 @@ const Employees = () => {
     const employeeMap = {
         "Blood Collectors": bloodCollectors,
         "Lab Technicians":  labTechnicians,
-        "Doctors":          doctors,
+       
     };
     const employees = employeeMap[activeTab] ?? [];
 
@@ -112,13 +109,7 @@ const Employees = () => {
             editItem
                 ? dispatch(updateLabTechnician({ ...form, id: editItem.id }))
                 : dispatch(addLabTechnician({ ...form, id: Date.now() }));
-        } else {
-            setDoctors((prev) =>
-                editItem
-                    ? prev.map((e) => e.id === editItem.id ? { ...form, id: editItem.id } : e)
-                    : [...prev, { ...form, id: Date.now() }]
-            );
-        }
+        } 
 
         setShowModal(false);
         setSearchTerm("");
@@ -130,7 +121,7 @@ const Employees = () => {
         if (!window.confirm("Are you sure you want to delete this employee?")) return;
         if      (activeTab === "Blood Collectors") dispatch(deleteBloodCollector(id));
         else if (activeTab === "Lab Technicians")  dispatch(deleteLabTechnician(id));
-        else setDoctors((prev) => prev.filter((e) => e.id !== id));
+        
     };
 
     // ── Retry ─────────────────────────────────────────────────────────────────
@@ -160,7 +151,7 @@ const Employees = () => {
     const tabCount = (tab) => {
         if (tab === "Blood Collectors") return loadingBC ? "…" : bloodCollectors.length;
         if (tab === "Lab Technicians")  return loadingLT ? "…" : labTechnicians.length;
-        return doctors.length;
+        
     };
 
     // ── Render ─────────────────────────────────────────────────────────────────
@@ -170,7 +161,7 @@ const Employees = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Employee Management</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage blood collectors, technicians, and doctors</p>
+                    <p className="text-sm text-gray-500 mt-1">Manage blood collectors, technicians</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200
@@ -279,7 +270,7 @@ const Employees = () => {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 border-y border-gray-200">
-                                    {["NAME", "MOBILE", "EMAIL", "GENDER", "DOB", "ID TYPE", "STATUS", "ACTIONS"].map((h) => (
+                                    {["NAME", "MOBILE", "EMAIL", "STATUS", "ACTIONS"].map((h) => (
                                         <th key={h} className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             {h}
                                         </th>
@@ -306,9 +297,7 @@ const Employees = () => {
                                             <td className="px-6 py-4 font-medium text-gray-900">{emp.name   || "—"}</td>
                                             <td className="px-6 py-4 text-gray-600">{emp.mobile || "—"}</td>
                                             <td className="px-6 py-4 text-gray-600">{emp.email  || "—"}</td>
-                                            <td className="px-6 py-4 text-gray-600">{emp.gender || "—"}</td>
-                                            <td className="px-6 py-4 text-gray-600">{emp.dob    || "—"}</td>
-                                            <td className="px-6 py-4 text-gray-600">{emp.idType || "—"}</td>
+                                            
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(emp.status)}`}>
                                                     {emp.status}

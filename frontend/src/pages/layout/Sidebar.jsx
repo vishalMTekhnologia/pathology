@@ -10,10 +10,12 @@ const adminLinks = [
     { label: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/dashboard" },
     { label: "Employees", icon: <Users size={18} />, path: "/employees" },
     { label: "Test Management", icon: <Beaker size={18} />, path: "/test-management" },
-    { label: "Pathology Details", icon: <FlaskConical size={18} />, path: "/pathology-details" },
+    
     // { label: "Profile", icon: <UserCircle size={18} />, path: "/profile" },
     { label: "Refer Doctor", icon: <Stethoscope size={18} />, path: "/refer-doctor" },
     { label: "Patient Management", icon: <UserPlus size={18} />, path: "/patient-management" },
+    { label: " Reports", icon: <FileText size={18} />, path: "/generate-report-admin" },
+    { label: "Pathology Details", icon: <FlaskConical size={18} />, path: "/pathology-details" },
 ];
 
 const technicianLinks = [

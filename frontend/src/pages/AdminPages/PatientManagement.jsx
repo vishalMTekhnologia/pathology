@@ -13,7 +13,8 @@ import {
 import { fetchTests } from "../../features/admin/TestSlice";
 import { fetchDoctors } from "../../features/admin/GetDoctorsSlice";
 import { getProfile } from "../../features/profile/profileSlice";
-import { fetchBloodBoys } from "../../features/admin/BloodCollectionSlice"; // Add this
+import { fetchBloodBoys } from "../../features/admin/BloodCollectionSlice";
+import { decryptField } from "../../utils/decrypt"; // Import the decrypt function
 
 const SEX_OPTIONS = [
     { value: "1", label: "Male" },
@@ -35,7 +36,7 @@ const PatientManagement = () => {
     const { tests: apiTests } = useSelector(state => state.tests);
     const { doctors: apiDoctors } = useSelector(state => state.doctorList);
     const { user } = useSelector(state => state.profile);
-    const { bloodBoys, loading: bloodBoysLoading } = useSelector(state => state.bloodCollection); // Add this
+    const { bloodBoys: rawBloodBoys, loading: bloodBoysLoading } = useSelector(state => state.bloodCollection);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -52,11 +53,20 @@ const PatientManagement = () => {
     const [readings, setReadings] = useState({});
     const [collapsedCategories, setCollapsedCategories] = useState({});
 
+    // ── Decrypt blood boys data ──────────────────────────────────────────────
+    const bloodBoys = (Array.isArray(rawBloodBoys) ? rawBloodBoys : []).map(bb => ({
+        ...bb,
+        lab_user_id: decryptField(bb.lab_user_id),
+        full_name: decryptField(bb.full_name),
+        user_email: decryptField(bb.user_email),
+        contact_no: decryptField(bb.contact_no)
+    }));
+
     // ── Fetch on mount ────────────────────────────────────────────────────────
     useEffect(() => {
         dispatch(fetchPatients());
         dispatch(fetchTests());
-        dispatch(fetchBloodBoys()); // Add this to fetch blood collection boys
+        dispatch(fetchBloodBoys());
         if (!user) dispatch(getProfile());
     }, [dispatch]);
 
@@ -114,13 +124,13 @@ const PatientManagement = () => {
         name: d.doc_name || d.doctore_name || d.name || "",
     }));
 
-    // Format blood collection boys for dropdown
-    const bloodBoyOptions = (Array.isArray(bloodBoys) ? bloodBoys : []).map(b => ({
-        id: b.lab_user_id || b.id,
+    // Format blood collection boys for dropdown - now with decrypted names
+    const bloodBoyOptions = bloodBoys.map(b => ({
+        id: b.lab_user_id,
         name: b.full_name || `Collection Boy ${b.lab_user_id}`,
         email: b.user_email,
         contact: b.contact_no,
-    }));
+    })).filter(b => b.name && b.name !== b.id); // Filter out entries that didn't decrypt properly
 
     // ── Modal helpers ─────────────────────────────────────────────────────────
     const openAdd = () => {
@@ -437,11 +447,11 @@ const PatientManagement = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center gap-2 transition-opacity">
                                                 <button
                                                     onClick={() => openReport(patient)}
                                                     title="Create Report"
-                                                    className="p-2 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100 transition-colors"
+                                                    className="p-2 bg-cyan-50 text-cyan-600 rounded-lg hover:bg-cyan-100 transition-colors"
                                                 >
                                                     <FileText size={14} />
                                                 </button>
@@ -643,190 +653,253 @@ const PatientManagement = () => {
             {modal?.type === "report" && reportPatient && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
                     onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl">
+                    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl">
 
-                        {/* Header */}
-                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-5 flex items-center justify-between z-10">
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <FileText size={18} className="text-violet-600" />
-                                    Create Report
-                                </h2>
-                                <p className="text-sm text-gray-500 mt-0.5">
-                                    Patient: <span className="font-semibold text-gray-700">{reportPatient.name}</span>
-                                    <span className="mx-2 text-gray-300">|</span>
-                                    {reportPatient.age} yrs, {getSexLabel(reportPatient.sex)}
+                        {/* Header - Lab Info */}
+                        <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-100 px-8 py-6">
+                            <div className="text-center">
+                                <h1 className="text-2xl font-bold text-cyan-800 tracking-tight">DRLOGY PATHOLOGY LAB</h1>
+                                <p className="text-xs text-gray-500 mt-1 font-medium">Accurate | Caring | Instant</p>
+                                <p className="text-[11px] text-gray-400 mt-1">
+                                    105-108, SMART VISION COMPLEX, HEALTHCARE ROAD, OPPOSITE HEALTHCARE COMPLEX. MUMBAI - 680578
                                 </p>
                             </div>
-                            <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500">
-                                <X size={20} />
-                            </button>
+
+                            {/* Patient Info Card */}
+                            <div className="mt-5 bg-white rounded-xl p-4 border border-cyan-100 shadow-sm">
+                                <div className="flex flex-wrap justify-between items-start gap-4">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-800">{reportPatient.name}</h3>
+                                        <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-600">
+                                            <span><span className="font-semibold">Age:</span> {reportPatient.age} Years</span>
+                                            <span>|</span>
+                                            <span><span className="font-semibold">Sex:</span> {getSexLabel(reportPatient.sex)}</span>
+                                            <span>|</span>
+                                            <span><span className="font-semibold">PID:</span> {reportPatient.id}</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-500">
+                                            <span className="font-semibold">Sample Collected At:</span><br />
+                                            125, Shivam Bungalow, S G Road, Mumbai
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            <span className="font-semibold">Ref. By:</span> Dr. Hiren Shah
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="p-6 space-y-5">
+                        <div className="p-8 space-y-6">
 
-                            {/* Step 1: Select Test + Collector */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Select Test <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={reportTestId}
-                                        onChange={e => handleReportTestChange(e.target.value)}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white
-                                                 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 transition-all cursor-pointer"
-                                    >
-                                        <option value="">— Choose a test —</option>
-                                        {reportPatient.tests && reportPatient.tests.length > 0
-                                            ? reportPatient.tests.map(t => (
-                                                <option key={t.test_id} value={t.test_id}>{t.test_name}</option>
-                                            ))
-                                            : testOptions.map(t => (
-                                                <option key={t.id} value={t.id}>{t.name}</option>
-                                            ))
-                                        }
-                                    </select>
-                                    {reportPatient.tests && reportPatient.tests.length === 0 && (
-                                        <p className="text-xs text-amber-600 mt-1">
-                                            ⚠️ No tests assigned to this patient. Please edit patient to add tests first.
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Sample Collected By <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={reportCollector}
-                                        onChange={e => setReportCollector(e.target.value)}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white
-                                                 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 transition-all cursor-pointer"
-                                        disabled={bloodBoysLoading}
-                                    >
-                                        <option value="">— Select collector —</option>
-                                        {bloodBoyOptions.map(b => (
-                                            <option key={b.id} value={b.id}>
-                                                {b.name} {b.contact ? `(${b.contact})` : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {bloodBoysLoading && (
-                                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                            <Loader2 className="animate-spin" size={12} />
-                                            Loading collectors...
-                                        </p>
-                                    )}
-                                    {!bloodBoysLoading && bloodBoyOptions.length === 0 && (
-                                        <p className="text-xs text-amber-600 mt-1">
-                                            ⚠️ No blood collection boys available. Please add them first.
-                                        </p>
-                                    )}
+                            {/* Step 1: Select Test + Collector - Redesigned */}
+                            <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                                <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                    <div className="w-1 h-5 bg-cyan-500 rounded-full"></div>
+                                    Report Information
+                                </h3>
+                                <div className="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
+                                            Select Test <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={reportTestId}
+                                            onChange={e => handleReportTestChange(e.target.value)}
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
+                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer font-medium"
+                                        >
+                                            <option value="">— Choose a test —</option>
+                                            {reportPatient.tests && reportPatient.tests.length > 0
+                                                ? reportPatient.tests.map(t => (
+                                                    <option key={t.test_id} value={t.test_id}>{t.test_name}</option>
+                                                ))
+                                                : testOptions.map(t => (
+                                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                                ))
+                                            }
+                                        </select>
+                                        {reportPatient.tests && reportPatient.tests.length === 0 && (
+                                            <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                                                ⚠️ No tests assigned to this patient. Please edit patient to add tests first.
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
+                                            Sample Collected By <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={reportCollector}
+                                            onChange={e => setReportCollector(e.target.value)}
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
+                                                     focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all cursor-pointer"
+                                            disabled={bloodBoysLoading}
+                                        >
+                                            <option value="">— Select collector —</option>
+                                            {bloodBoyOptions.map(b => (
+                                                <option key={b.id} value={b.id}>
+                                                    {b.name} {b.contact ? `(${b.contact})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {bloodBoysLoading && (
+                                            <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                                                <Loader2 className="animate-spin" size={12} />
+                                                Loading collectors...
+                                            </p>
+                                        )}
+                                        {!bloodBoysLoading && bloodBoyOptions.length === 0 && (
+                                            <p className="text-xs text-amber-600 mt-2">
+                                                ⚠️ No blood collection boys available. Please add them first.
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Step 2: Loading test structure */}
                             {testCatLoading && (
-                                <div className="flex items-center justify-center py-10">
-                                    <Loader2 className="animate-spin text-violet-600" size={28} />
-                                    <span className="ml-3 text-gray-500 text-sm">Loading test structure...</span>
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="animate-spin text-cyan-600" size={32} />
+                                    <span className="ml-3 text-gray-500 text-sm">Loading test parameters...</span>
                                 </div>
                             )}
 
-                            {/* Step 3: Readings form */}
+                            {/* Step 3: Readings form - Table Style */}
                             {!testCatLoading && testWithCategory && reportTestId && (
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-bold text-gray-800">Enter Readings for {testWithCategory.test_name}</h3>
-                                        <span className="text-xs text-gray-400">
-                                            {(testWithCategory.categories || []).length} categories
-                                        </span>
+                                <div className="space-y-5">
+                                    <div className="border-b border-gray-200 pb-2">
+                                        <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                            <FileText size={18} className="text-cyan-600" />
+                                            {testWithCategory.test_name}
+                                        </h3>
+                                        <p className="text-xs text-gray-500 mt-1">Enter test readings and observations</p>
                                     </div>
 
                                     {(testWithCategory.categories || []).map(cat => (
-                                        <div key={cat.category_id} className="border border-gray-200 rounded-xl overflow-hidden">
+                                        <div key={cat.category_id} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
 
                                             {/* Category header */}
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleCategory(cat.category_id)}
-                                                className="w-full flex items-center justify-between px-4 py-3
-                                                         bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-semibold text-gray-800">{cat.category_name}</span>
-                                                    <span className="text-xs text-gray-400 font-normal">
-                                                        ₹{cat.price} · {(cat.sub_categories || []).length} parameter{(cat.sub_categories || []).length !== 1 ? "s" : ""}
-                                                    </span>
+                                            <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold text-gray-800">{cat.category_name}</span>
+                                                        <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+                                                            {(cat.sub_categories || []).length} Parameters
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleCategory(cat.category_id)}
+                                                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                                    >
+                                                        {collapsedCategories[cat.category_id]
+                                                            ? <ChevronDown size={18} className="text-gray-500" />
+                                                            : <ChevronUp size={18} className="text-gray-500" />
+                                                        }
+                                                    </button>
                                                 </div>
-                                                {collapsedCategories[cat.category_id]
-                                                    ? <ChevronDown size={16} className="text-gray-400" />
-                                                    : <ChevronUp size={16} className="text-gray-400" />
-                                                }
-                                            </button>
+                                            </div>
 
-                                            {/* Sub-category rows */}
+                                            {/* Sub-category rows - Table Layout */}
                                             {!collapsedCategories[cat.category_id] && (
-                                                <div className="divide-y divide-gray-100">
-                                                    {(cat.sub_categories || []).length === 0 ? (
-                                                        <p className="px-4 py-3 text-sm text-gray-400 italic">No parameters defined for this category</p>
-                                                    ) : (
-                                                        cat.sub_categories.map(sub => (
-                                                            <div key={sub.sub_category_id} className="px-4 py-3 grid grid-cols-12 gap-3 items-center">
-
-                                                                <div className="col-span-4">
-                                                                    <p className="text-sm font-medium text-gray-800">{sub.sub_category_name}</p>
-                                                                    <p className="text-xs text-gray-400 mt-0.5">
-                                                                        {sub.unit && <span className="font-mono">{sub.unit}</span>}
-                                                                        {sub.normal_range_min !== undefined && sub.normal_range_max !== undefined && (
-                                                                            <span className="ml-1">
-                                                                                · Normal: {sub.normal_range_min}–{sub.normal_range_max}
-                                                                            </span>
-                                                                        )}
-                                                                    </p>
-                                                                </div>
-
-                                                                <div className="col-span-3">
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="Enter value"
-                                                                        value={readings[sub.sub_category_id]?.value_text || ""}
-                                                                        onChange={e => {
-                                                                            const v = e.target.value;
-                                                                            updateReading(sub.sub_category_id, "value_text", v);
-                                                                            const numValue = parseFloat(v);
-                                                                            updateReading(sub.sub_category_id, "value", isNaN(numValue) ? 0 : numValue);
-                                                                        }}
-                                                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                                                                                 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 transition-all"
-                                                                    />
-                                                                </div>
-
-                                                                <div className="col-span-5">
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="Remarks (optional)"
-                                                                        value={readings[sub.sub_category_id]?.remarks || ""}
-                                                                        onChange={e => updateReading(sub.sub_category_id, "remarks", e.target.value)}
-                                                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                                                                                 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 transition-all"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        ))
-                                                    )}
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-sm">
+                                                        <thead className="bg-white border-b border-gray-200">
+                                                            <tr>
+                                                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                                                    Parameter
+                                                                </th>
+                                                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                                                                    Result
+                                                                </th>
+                                                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                                                    Reference Value
+                                                                </th>
+                                                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
+                                                                    Remarks
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-gray-100">
+                                                            {(cat.sub_categories || []).length === 0 ? (
+                                                                <tr>
+                                                                    <td colSpan="4" className="px-5 py-6 text-center text-sm text-gray-400 italic">
+                                                                        No parameters defined for this category
+                                                                    </td>
+                                                                </tr>
+                                                            ) : (
+                                                                cat.sub_categories.map(sub => (
+                                                                    <tr key={sub.sub_category_id} className="hover:bg-gray-50 transition-colors">
+                                                                        <td className="px-5 py-3">
+                                                                            <p className="text-sm font-medium text-gray-800">{sub.sub_category_name}</p>
+                                                                            {sub.unit && (
+                                                                                <p className="text-xs text-gray-500 mt-0.5">Unit: {sub.unit}</p>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="px-5 py-3">
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Enter value"
+                                                                                value={readings[sub.sub_category_id]?.value_text || ""}
+                                                                                onChange={e => {
+                                                                                    const v = e.target.value;
+                                                                                    updateReading(sub.sub_category_id, "value_text", v);
+                                                                                    const numValue = parseFloat(v);
+                                                                                    updateReading(sub.sub_category_id, "value", isNaN(numValue) ? 0 : numValue);
+                                                                                }}
+                                                                                className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm
+                                                                                         focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all"
+                                                                            />
+                                                                        </td>
+                                                                        <td className="px-5 py-3">
+                                                                            <div className="text-sm text-gray-700">
+                                                                                {sub.normal_range_min !== undefined && sub.normal_range_max !== undefined ? (
+                                                                                    <>
+                                                                                        <span className="font-mono">
+                                                                                            {sub.normal_range_min} - {sub.normal_range_max}
+                                                                                        </span>
+                                                                                        {sub.unit && <span className="text-xs text-gray-500 ml-1">{sub.unit}</span>}
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <span className="text-gray-400 text-xs">No reference</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="px-5 py-3">
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Optional remarks"
+                                                                                value={readings[sub.sub_category_id]?.remarks || ""}
+                                                                                onChange={e => updateReading(sub.sub_category_id, "remarks", e.target.value)}
+                                                                                className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm
+                                                                                         focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all"
+                                                                            />
+                                                                        </td>
+                                                                    </tr>
+                                                                ))
+                                                            )}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             )}
                                         </div>
                                     ))}
+
+                                    {/* Instrument Info */}
+                                    <div className="text-right text-[10px] text-gray-400 mt-3 pt-2 border-t border-gray-100">
+                                        <p>Instruments: Fully automated cell counter - Mindray 300</p>
+                                    </div>
                                 </div>
                             )}
 
                             {/* Show message when no test is selected */}
                             {!testCatLoading && !testWithCategory && reportTestId === "" && (
-                                <div className="text-center py-8 text-gray-400">
-                                    <FileText size={48} className="mx-auto mb-3 opacity-50" />
-                                    <p>Select a test to start entering readings</p>
+                                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                    <FileText size={48} className="mx-auto mb-3 text-gray-300" />
+                                    <p className="text-gray-500 font-medium">Select a test to start entering readings</p>
                                     {reportPatient.tests && reportPatient.tests.length === 0 && (
                                         <p className="text-sm text-amber-600 mt-2">
                                             Note: This patient has no tests assigned. Please edit the patient to add tests first.
@@ -837,29 +910,35 @@ const PatientManagement = () => {
 
                             {/* Error */}
                             {(formError || reportError) && (
-                                <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+                                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 text-sm px-4 py-3 rounded-lg">
                                     {formError || reportError}
                                 </div>
                             )}
                         </div>
 
                         {/* Footer */}
-                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-8 py-4 flex justify-end gap-3">
                             <button onClick={closeModal}
-                                className="px-5 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+                                className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 
+                                         hover:bg-gray-100 transition-colors">
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmitReport}
                                 disabled={reportLoading || !reportTestId || !reportCollector || bloodBoysLoading}
-                                className="px-6 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium
-                                         hover:bg-violet-700 active:bg-violet-800 transition-all
-                                         shadow-lg shadow-violet-600/30 disabled:opacity-50
+                                className="px-8 py-2.5 bg-cyan-600 text-white rounded-lg text-sm font-semibold
+                                         hover:bg-cyan-700 active:bg-cyan-800 transition-all
+                                         shadow-lg shadow-cyan-600/30 disabled:opacity-50
                                          disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 {reportLoading && <Loader2 className="animate-spin" size={14} />}
                                 Submit Report
                             </button>
+                        </div>
+
+                        {/* End of Report Footer */}
+                        <div className="text-center py-3 border-t border-gray-100 text-[10px] text-gray-400">
+                            **** End of Report ****
                         </div>
                     </div>
                 </div>

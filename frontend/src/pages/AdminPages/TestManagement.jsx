@@ -360,7 +360,7 @@ const TestManagement = () => {
                                             <td className="px-6 py-4 font-medium text-gray-900">{test.name}</td>
                                             <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{test.description || "—"}</td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-2  transition-opacity">
                                                     <button onClick={() => openEdit(test)}
                                                         className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
                                                         <Pencil size={14} />
@@ -408,7 +408,7 @@ const TestManagement = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-2  transition-opacity">
                                                     <button onClick={() => openEdit(cat)}
                                                         className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
                                                         <Pencil size={14} />
@@ -456,7 +456,7 @@ const TestManagement = () => {
                                                     : "—"}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center gap-2">
                                                     <button onClick={() => openEdit(sub)}
                                                         className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
                                                         <Pencil size={14} />

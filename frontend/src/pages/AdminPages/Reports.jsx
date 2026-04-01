@@ -6,6 +6,7 @@ import {
     Calendar, User, Stethoscope, Printer, Eye, X, ChevronDown, ChevronUp
 } from "lucide-react";
 import { fetchReports } from "../../features/admin/ReportSlice";
+import ReportViewer from "../../components/ReportViewer";
 
 const Reports = () => {
     const dispatch = useDispatch();
@@ -312,169 +313,10 @@ const Reports = () => {
 
             {/* Report Detail Modal */}
             {showModal && selectedReport && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                    onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
-                    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-2xl">
-
-                        {/* Header - Lab Info */}
-                        <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-100 px-8 py-6">
-                            <div className="text-center">
-                                <h1 className="text-2xl font-bold text-cyan-800 tracking-tight">DRLOGY PATHOLOGY LAB</h1>
-                                <p className="text-xs text-gray-500 mt-1 font-medium">Accurate | Caring | Instant</p>
-                                <p className="text-[11px] text-gray-400 mt-1">
-                                    105-108, SMART VISION COMPLEX, HEALTHCARE ROAD, OPPOSITE HEALTHCARE COMPLEX. MUMBAI - 680578
-                                </p>
-                            </div>
-
-                            {/* Patient Info Card */}
-                            <div className="mt-5 bg-white rounded-xl p-4 border border-cyan-100 shadow-sm">
-                                <div className="flex flex-wrap justify-between items-start gap-4">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-800">{selectedReport.patient_name}</h3>
-                                        <div className="flex flex-wrap gap-3 mt-1 text-sm text-gray-600">
-                                            <span><span className="font-semibold">Age:</span> {selectedReport.age} Years</span>
-                                            <span>|</span>
-                                            <span><span className="font-semibold">Sex:</span> {getSexLabel(selectedReport.sex)}</span>
-                                            <span>|</span>
-                                            <span><span className="font-semibold">Report #:</span> {selectedReport.report_number}</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-gray-500">
-                                            <span className="font-semibold">Report Date:</span><br />
-                                            {formatDate(selectedReport.created_at)}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            <span className="font-semibold">Test:</span> {selectedReport.test_name}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-8 space-y-6">
-                            {/* Test Results */}
-                            <div className="space-y-5">
-                                <div className="border-b border-gray-200 pb-2 flex justify-between items-center">
-                                    <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                        <FileText size={18} className="text-cyan-600" />
-                                        Test Results: {selectedReport.test_name}
-                                    </h3>
-                                   
-                                </div>
-
-                                {selectedReport.categories?.map(cat => (
-                                    cat.sub_categories && cat.sub_categories.length > 0 && (
-                                        <div key={cat.category_id} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                                            <div className="bg-gray-50 px-5 py-3 border-b border-gray-200">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-bold text-gray-800">{cat.category_name}</span>
-                                                        <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
-                                                            {cat.sub_categories.length} Parameters
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-sm">
-                                                    <thead className="bg-white border-b border-gray-200">
-                                                        <tr>
-                                                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                                Parameter
-                                                            </th>
-                                                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                                Result
-                                                            </th>
-                                                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                                Reference Range
-                                                            </th>
-                                                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                                Flag
-                                                            </th>
-                                                            <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                                Remarks
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-gray-100">
-                                                        {cat.sub_categories.map(sub => (
-                                                            <tr key={sub.sub_category_id} className="hover:bg-gray-50 transition-colors">
-                                                                <td className="px-5 py-3">
-                                                                    <p className="text-sm font-medium text-gray-800">{sub.sub_category_name}</p>
-                                                                    {sub.unit && (
-                                                                        <p className="text-xs text-gray-500 mt-0.5">Unit: {sub.unit}</p>
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-5 py-3">
-                                                                    <span className={`text-sm font-semibold ${getFlagColor(sub.flag)}`}>
-                                                                        {sub.value_text || sub.value || "—"}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-5 py-3">
-                                                                    <div className="text-sm text-gray-700">
-                                                                        {sub.normal_range_min !== undefined && sub.normal_range_max !== undefined ? (
-                                                                            <>
-                                                                                <span className="font-mono">
-                                                                                    {sub.normal_range_min} - {sub.normal_range_max}
-                                                                                </span>
-                                                                                {sub.unit && <span className="text-xs text-gray-500 ml-1">{sub.unit}</span>}
-                                                                            </>
-                                                                        ) : (
-                                                                            <span className="text-gray-400 text-xs">No reference</span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-5 py-3">
-                                                                    {getFlagBadge(sub.flag)}
-                                                                </td>
-                                                                <td className="px-5 py-3 text-sm text-gray-500">
-                                                                    {sub.remarks || "—"}
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    )
-                                ))}
-
-                                {/* Instrument Info */}
-                                <div className="text-right text-[10px] text-gray-400 mt-3 pt-2 border-t border-gray-100">
-                                    <p>Instruments: Fully automated cell counter - Mindray 300</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-8 py-4 flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 
-                                         hover:bg-gray-100 transition-colors flex items-center gap-2"
-                            >
-                                <X size={16} />
-                                Close
-                            </button>
-                            <button
-                                onClick={printReport}
-                                className="px-6 py-2.5 bg-cyan-600 text-white rounded-lg text-sm font-semibold
-                                         hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-600/30
-                                         flex items-center gap-2"
-                            >
-                                <Printer size={16} />
-                                Print Report
-                            </button>
-                        </div>
-
-                        {/* End of Report Footer */}
-                        <div className="text-center py-3 border-t border-gray-100 text-[10px] text-gray-400">
-                            **** End of Report ****
-                        </div>
-                    </div>
-                </div>
+                <ReportViewer
+                    report={selectedReport}
+                    onClose={() => setShowModal(false)}
+                />
             )}
         </div>
     );

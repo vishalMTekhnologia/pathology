@@ -57,11 +57,9 @@ export const labService = {
   },
 
   deleteLab: async (lab_id, deleted_at, deleted_by) => {
-
     if (!lab_id) {
       throw new AppError("lab_id is required", 400);
     }
-
       const result = await query(
       `
       UPDATE tbl_lab
@@ -74,23 +72,45 @@ export const labService = {
       `,
       [deleted_at, deleted_by, lab_id],
     );
-
     return ResponseBuilder.success(
       null,
       "Lab deleted successfully"
     );
-
   },
 
   getLabs: async () => {
-
     const sql = `CALL get_labs()`;
-
     const [rows] = await query(sql);
-
     return ResponseBuilder.success( "Labs fetched successfully", rows);
-
   },
+
+  getLabsByLabId : async (lab_id) => {
+  try {
+    if (!lab_id) {
+      throw new Error("lab_id is required");
+    }
+
+    const sql = `
+      SELECT *
+      FROM tbl_lab
+      WHERE lab_id = ? AND deleted_at IS NULL
+    `;
+
+    const rows = await query(sql, [lab_id]);
+
+    if (rows.length === 0) {
+      return ResponseBuilder.success("No lab found", []);
+    }
+
+    return ResponseBuilder.success(
+      "Lab details fetched successfully",
+      rows[0]   // single record
+    );
+
+  } catch (error) {
+    throw error;
+  }
+},
 
     assignLabUsers: async (data) => {
 

@@ -5,6 +5,7 @@ export const labRouter = (() => {
   const router = express.Router();
 router.post("/add", labController.addLab);
 router.get("/", labController.getLabs);
+router.get("/get-lab-by-id", labController.getLabsByLabId)
 router.patch("/update", labController.updateLab);
 router.delete("/delete/:lab_id", labController.deleteLab);
 // lab users

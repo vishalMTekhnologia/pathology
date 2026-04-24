@@ -105,7 +105,7 @@ export const labController = {
 
   getLabsByLabId : asyncHandler(async (req, res) => {
  const lab_id = req.user?.lab_id;
-
+    
     if (!lab_id) {
       throw new AppError("Lab ID is required", 400);
     }

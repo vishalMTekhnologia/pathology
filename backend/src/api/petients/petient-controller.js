@@ -21,6 +21,7 @@ export const patientController = {
       status,
       fees,
       advance,
+      sample_type_id
     } = req.body;
 
     if (!lab_id || !patient_name || !patient_contact || !age || !test_ids) {
@@ -40,6 +41,7 @@ export const patientController = {
       status,
       fees,
       advance,
+      sample_type_id,
       created_at: getEpochTime(),
       created_by
     };

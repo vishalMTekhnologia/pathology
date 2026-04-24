@@ -12,17 +12,15 @@ export const categoryService = {
         test_id,
         category_name,
         category_discription,
-        price,
         created_at,
         created_by
-      ) VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?)
     `;
 
     const values = [
       data.test_id,
       data.category_name,
       data.category_discription,
-      data.price ?? null,
       data.created_at,
       data.created_by
     ];
@@ -96,7 +94,6 @@ export const categoryService = {
         test_id = COALESCE(?, test_id),
         category_name = COALESCE(?, category_name),
         category_discription = COALESCE(?, category_discription),
-        price = COALESCE(?, price),
         updated_at = ?,
         updated_by = ?
       WHERE category_id = ? AND deleted_at IS NULL
@@ -106,7 +103,6 @@ export const categoryService = {
       data.test_id ?? null,
       data.category_name ?? null,
       data.category_discription ?? null,
-      data.price ?? null,
       data.updated_at,
       data.updated_by,
       data.category_id

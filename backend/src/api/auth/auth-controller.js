@@ -46,8 +46,10 @@ export const authController = {
       user_email,
       contact_no,
       address,
+      qaulification,
       user_password,
     } = req.body;
+    
     const userPhotoFile = req.files?.userPhoto?.[0] || null;
     let pro_pic = null;
     if (userPhotoFile) {
@@ -76,6 +78,7 @@ export const authController = {
       user_email,
       contact_no,
       address,
+      qaulification,
       user_password,
       pro_pic,
       createdAt,

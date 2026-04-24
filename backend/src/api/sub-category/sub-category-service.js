@@ -15,9 +15,10 @@ export const subCategoryService = {
         unit,
         normal_range_min,
         normal_range_max,
+        parameter_name,
         created_at,
         created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -27,6 +28,7 @@ export const subCategoryService = {
       data.unit,
       data.normal_range_min,
       data.normal_range_max,
+      data.parameter_name,
       data.created_at,
       data.created_by
     ];
@@ -107,6 +109,7 @@ export const subCategoryService = {
         unit = COALESCE(?, unit),
         normal_range_min = COALESCE(?, normal_range_min),
         normal_range_max = COALESCE(?, normal_range_max),
+        parameter_name = COALESCE(?, parameter_name),
         status = COALESCE(?, status),
         updated_at = ?,
         updated_by = ?
@@ -120,6 +123,7 @@ export const subCategoryService = {
       data.unit ?? null,
       data.normal_range_min ?? null,
       data.normal_range_max ?? null,
+      data.parameter_name ?? null,
       data.status ?? null,
       data.updated_at,
       data.updated_by,

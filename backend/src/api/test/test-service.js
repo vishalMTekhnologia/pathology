@@ -11,14 +11,16 @@ export const testService = {
         test_code,
         test_name,
         test_description,
+        price,
         created_at,
         created_by
-      ) VALUES (?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?)
     `;
     const values = [
       data.test_code ?? null,
       data.test_name,
       data.test_description,
+      data.price,
       data.created_at,
       data.created_by
     ];
@@ -106,7 +108,7 @@ export const testService = {
         test_code = COALESCE(?, test_code),
         test_name = COALESCE(?, test_name),
         test_description = COALESCE(?, test_description),
-        status = COALESCE(?, status),
+        price = COALESCE(?, price),
         updated_at = ?,
         updated_by = ?
       WHERE test_id = ? AND deleted_at IS NULL
@@ -116,7 +118,7 @@ export const testService = {
       data.test_code ?? null,
       data.test_name ?? null,
       data.test_description ?? null,
-      data.status ?? null,
+      data.price ?? null,
       data.updated_at,
       data.updated_by,
       data.test_id

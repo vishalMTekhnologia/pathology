@@ -108,11 +108,11 @@ io.on("connection_error", (err) => {
 app.use("/api/v1", apiLimiter, masterRouter);
 
 const sample = decrypt(
-  "8f64a53fbc980e63318c8f7aa754e27c0677bf1eb71f3a45a2b67385a37fc9240489bcba58c00dbbc2ba85d2dd994c5b4532628ae7f33d692e7f04edc91e0601ce9270c31d08a5e4c29e5db80d83e7e2a83708c28c9892649ac64b4f541334f7",
+  "e338881760aa52813ce84abb3e3813eea9b808b13a24e90a89c1f9ba3d23b31290b532d6560ea4aa12f510fe1379e56a3b3c07fcf9879f122b24139d266109b6a04ac173bf6aad16d965845b991b35a56770a6614c8608f0ba9d9e8df50f87ae",
   process.env.STATIC_KEY,
 );
 // const sample = encrypt("delhi").encryptedData;
-// console.log(sample);
+console.log(sample);
 
 // Root route
 app.get("/", (req, res) => {

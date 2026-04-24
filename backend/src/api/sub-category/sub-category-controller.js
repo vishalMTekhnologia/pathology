@@ -14,7 +14,8 @@ export const subCategoryController = {
       sub_category_description,
       unit,
       normal_range_min,
-      normal_range_max
+      normal_range_max,
+      parameter_name
     } = req.body;
 
     if (!category_id || !sub_category_name || !unit || normal_range_min == null || normal_range_max == null) {
@@ -28,6 +29,7 @@ export const subCategoryController = {
       unit,
       normal_range_min,
       normal_range_max,
+      parameter_name,
       created_at: getEpochTime(),
       created_by: req.user?.user_id
     };
@@ -72,6 +74,7 @@ export const subCategoryController = {
       unit,
       normal_range_min,
       normal_range_max,
+      parameter_name,
       status
     } = req.body;
 
@@ -83,6 +86,7 @@ export const subCategoryController = {
       unit,
       normal_range_min,
       normal_range_max,
+      parameter_name,
       status,
       updated_at: getEpochTime(),
       updated_by: req.user?.user_id

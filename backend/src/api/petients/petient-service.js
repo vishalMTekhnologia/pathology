@@ -6,7 +6,7 @@ export const patientService = {
 
   // Create Patient
   createPatient: async (data) => {
-    const sql = `CALL CreatePatient(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    const sql = `CALL CreatePatient(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
     const values = [
       data.lab_id,
       data.patient_name,
@@ -20,6 +20,7 @@ export const patientService = {
       data.status || 1,
       data.fees || 0,
       data.advance || 0,
+      data.sample_type_id,
       data.created_at,
       data.created_by
     ];
@@ -39,9 +40,7 @@ export const patientService = {
 
   // Get Patients
   getPatientsByLab: async (lab_id) => {
-
     const sql = `CALL GetPatientsByLab(?)`;
-
     try {
       const rows = await query(sql, [lab_id]);
 

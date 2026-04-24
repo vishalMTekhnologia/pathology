@@ -27,12 +27,12 @@ export const upload = multer({
     // Validate file fields
     if (
       [
-        "circlePhoto",
+        // "circlePhoto",
         "userPhoto",
-        "eventCoverImage",
-        "excelFile",
-        "firmLogo",
-        "branchLogo",
+        // "eventCoverImage",
+        // "excelFile",
+        // "firmLogo",
+        // "branchLogo",
       ].includes(file.fieldname)
     ) {
       // Image files validation
@@ -113,7 +113,7 @@ export const photoToAzureBlob = async (file, folder) => {
   try {
     const connStr = process.env.AZURE_CONNECTION_STRING;
     const containerName = process.env.USER_PHOTO_THUMBNAIL_CONTAINER;
-
+                                                                                
     const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
@@ -124,10 +124,10 @@ export const photoToAzureBlob = async (file, folder) => {
 
     const prefixMap = {
       userPhoto: "UP",
-      circlePhoto: "GP",
-      eventCoverImage: "ECI",
-      firmLogo: "FL",
-      branchLogo: "BL"
+      // circlePhoto: "GP",
+      // eventCoverImage: "ECI",
+      // firmLogo: "FL",
+      // branchLogo: "BL"
     };
     
     const baseName = prefixMap[file.fieldname] || "File";

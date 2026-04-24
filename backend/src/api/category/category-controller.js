@@ -13,8 +13,7 @@ export const categoryController = {
     const {
       test_id,
       category_name,
-      category_discription,
-      price
+      category_discription
     } = req.body;
 
     if (!test_id || !category_name || !category_discription) {
@@ -25,7 +24,6 @@ export const categoryController = {
       test_id,
       category_name,
       category_discription,
-      price,
       created_at: getEpochTime(),
       created_by
     };
@@ -69,8 +67,7 @@ export const categoryController = {
     const {
       test_id,
       category_name,
-      category_discription,
-      price
+      category_discription
     } = req.body;
 
     const data = {
@@ -78,7 +75,6 @@ export const categoryController = {
       test_id,
       category_name,
       category_discription,
-      price,
       updated_at: getEpochTime(),
       updated_by: req.user?.user_id
     };

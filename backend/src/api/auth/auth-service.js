@@ -20,6 +20,7 @@ export const authService = {
     user_email,
     contact_no,
     address,
+    qaulification,
     user_password,
     pro_pic,
     createdAt,
@@ -30,18 +31,21 @@ export const authService = {
     const encryEmail = encrypt(user_email).encryptedData;
     const encryMobileNo = encrypt(contact_no).encryptedData;
     const encryAddressNo = encrypt(address).encryptedData;
+    const encryQaulification = encrypt(qaulification).encryptedData;
     const encryUserPro = pro_pic ? encrypt(pro_pic).encryptedData : null;
-    const spQuery = "CALL Register(?, ?, ?, ?, ?, ?, ?, ?);";
+    const spQuery = "CALL Register(?, ?, ?, ?, ?, ?, ?, ?, ?);";
     const spResults = await query(spQuery, [
       role_id,
       encryName,
       encryEmail,
       encryMobileNo,
       encryAddressNo,
+      encryQaulification,
       hashedPassword,
       encryUserPro,
       createdAt,
     ]);
+
     const procRow = spResults?.[0]?.[0] || {};
     const message = procRow.message;
     const user_id = procRow.user_id;

@@ -13,7 +13,8 @@ export const testController = {
     const {
       test_code,
       test_name,
-      test_description
+      test_description,
+      price,
     } = req.body;
 
     if (!test_name || !test_description) {
@@ -24,6 +25,7 @@ export const testController = {
       test_code,
       test_name,
       test_description,
+      price,
       created_at: getEpochTime(),
       created_by
     };
@@ -83,7 +85,7 @@ export const testController = {
       test_code,
       test_name,
       test_description,
-      status
+      price,
     } = req.body;
 
     const data = {
@@ -91,7 +93,7 @@ export const testController = {
       test_code,
       test_name,
       test_description,
-      status,
+      price,
       updated_at: getEpochTime(),
       updated_by: req.user?.user_id
     };
